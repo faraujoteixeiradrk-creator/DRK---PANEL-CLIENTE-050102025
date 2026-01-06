@@ -22561,13 +22561,14 @@ function generateComparison() {
         return;
     }
     
-    console.log(`📋 ${tarifas.length} tarifas disponibles para comparar`);
+    console.log(`📋 ${tarifas.length} tarifas totales en Google Sheets`);
     
-    // Calcular coste para cada tarifa usando la función real del calculador
+    // Calcular coste para TODAS las tarifas
     const todosResultados = tarifas.map(tarifa => {
         try {
             const resultado = calculateTariffCost(tarifa, clienteTipo, '2.0TD');
             const nombreComercializadora = (tarifa.comercializadora || tarifa.name || 'Sin nombre').trim();
+            const descNormalizado = (tarifa.description || '').toUpperCase().trim();
             
             return {
                 comercializadora: nombreComercializadora,
@@ -22576,9 +22577,9 @@ function generateComparison() {
                 resultado: resultado,
                 tarifa: tarifa,
                 nombreOriginal: nombreComercializadora,
-                nombreNormalizado: nombreComercializadora.toUpperCase()
-                    .replace(/\s+/g, ' ')
-                    .trim()
+                descripcion: tarifa.description || '',
+                nombreNormalizado: nombreComercializadora.toUpperCase().replace(/\s+/g, ' ').trim(),
+                descripcionNormalizada: descNormalizado
             };
         } catch (err) {
             console.error('Error calculando tarifa:', tarifa, err);
@@ -22586,67 +22587,106 @@ function generateComparison() {
         }
     }).filter(r => r !== null);
     
-    // ESTRATEGIA FORZADA: DRK siempre primero, luego grandes comercializadoras
-    let resultados = [];
+    console.log(`✅ ${todosResultados.length} tarifas calculadas correctamente`);
     
-    // 1. BUSCAR Y FORZAR DRK INDEX PRIMERO
-    const drkIndex = todosResultados.find(r => 
-        r.nombreNormalizado.includes('DRK') && 
-        (r.nombreNormalizado.includes('INDEX') || r.nombreNormalizado.includes('INDEXAD'))
-    );
+    // PASO 1: Buscar TODAS las DRK INDEX y seleccionar LA MÁS BARATA
+    const todasDRKIndex = todosResultados.filter(r => {
+        const esDRK = r.nombreNormalizado.includes('DRK');
+        const noEsFijo = !r.descripcionNormalizada.includes('FIJO') && !r.descripcionNormalizada.includes('FIX');
+        const noEsMeta = !r.descripcionNormalizada.includes('META');
+        return esDRK && noEsFijo && noEsMeta;
+    });
     
-    // 2. BUSCAR Y FORZAR DRK FIJO SEGUNDO
-    const drkFijo = todosResultados.find(r => 
-        r.nombreNormalizado.includes('DRK') && 
-        (r.nombreNormalizado.includes('FIJ') || r.nombreNormalizado.includes('FIXED'))
-    );
+    console.log(`🔍 Encontradas ${todasDRKIndex.length} tarifas DRK INDEX`);
+    todasDRKIndex.forEach(t => console.log(`  - ${t.descripcion}: ${t.costeAnual.toFixed(2)}€/año`));
     
-    // Añadir DRK en orden forzado
-    if (drkIndex) {
-        resultados.push(drkIndex);
-        console.log('✅ 1º: DRK INDEX -', drkIndex.costeAnual.toFixed(2), '€/año');
+    // Ordenar y tomar la más barata
+    todasDRKIndex.sort((a, b) => a.costeAnual - b.costeAnual);
+    const mejorDRKIndex = todasDRKIndex[0];
+    
+    if (mejorDRKIndex) {
+        console.log(`✅ MEJOR DRK INDEX seleccionada: ${mejorDRKIndex.descripcion} - ${mejorDRKIndex.costeAnual.toFixed(2)}€/año`);
     }
     
-    if (drkFijo) {
-        resultados.push(drkFijo);
-        console.log('✅ 2º: DRK FIJO -', drkFijo.costeAnual.toFixed(2), '€/año');
+    // PASO 2: Buscar TODAS las DRK FIJO y seleccionar LA MÁS BARATA
+    const todasDRKFijo = todosResultados.filter(r => {
+        const esDRK = r.nombreNormalizado.includes('DRK');
+        const esFijo = r.descripcionNormalizada.includes('FIJO') || r.descripcionNormalizada.includes('FIX');
+        const noEsMeta = !r.descripcionNormalizada.includes('META');
+        return esDRK && esFijo && noEsMeta;
+    });
+    
+    console.log(`🔍 Encontradas ${todasDRKFijo.length} tarifas DRK FIJO`);
+    todasDRKFijo.forEach(t => console.log(`  - ${t.descripcion}: ${t.costeAnual.toFixed(2)}€/año`));
+    
+    // Ordenar y tomar la más barata
+    todasDRKFijo.sort((a, b) => a.costeAnual - b.costeAnual);
+    const mejorDRKFijo = todasDRKFijo[0];
+    
+    if (mejorDRKFijo) {
+        console.log(`✅ MEJOR DRK FIJO seleccionada: ${mejorDRKFijo.descripcion} - ${mejorDRKFijo.costeAnual.toFixed(2)}€/año`);
     }
     
-    // 3. BUSCAR COMERCIALIZADORAS GRANDES CONOCIDAS
+    // PASO 3: Añadir las 2 DRK y ORDENARLAS POR PRECIO REAL
+    let drkTarifas = [];
+    if (mejorDRKIndex) drkTarifas.push(mejorDRKIndex);
+    if (mejorDRKFijo) drkTarifas.push(mejorDRKFijo);
+    
+    // IMPORTANTE: Ordenar por precio real (la más barata primero)
+    drkTarifas.sort((a, b) => a.costeAnual - b.costeAnual);
+    
+    console.log('📋 Tarifas DRK en orden de precio:');
+    drkTarifas.forEach((t, i) => {
+        console.log(`  ${i+1}º: ${t.descripcion} - ${t.costeAnual.toFixed(2)}€/año`);
+    });
+    
+    // PASO 4: Buscar MEJOR tarifa de cada comercializadora GRANDE (NO-DRK)
     const comercializadorasObjetivo = [
         { keywords: ['ENDESA'], nombre: 'Endesa' },
         { keywords: ['IBERDROLA'], nombre: 'Iberdrola' },
         { keywords: ['NATURGY'], nombre: 'Naturgy' },
         { keywords: ['REPSOL'], nombre: 'Repsol' },
         { keywords: ['TOTAL', 'TOTALENERGIES'], nombre: 'TotalEnergies' },
-        { keywords: ['CHC', 'CHC ENERGIA'], nombre: 'CHC Energía' }
+        { keywords: ['CHC'], nombre: 'CHC Energía' }
     ];
     
-    // Buscar la MEJOR tarifa de cada comercializadora objetivo
+    let otrasComercializadoras = [];
+    
     for (const comercialObj of comercializadorasObjetivo) {
-        // Filtrar todas las tarifas de esta comercializadora
+        // Filtrar TODAS las tarifas de esta comercializadora (excluyendo DRK)
         const tarifasComercial = todosResultados.filter(r => {
-            return comercialObj.keywords.some(keyword => r.nombreNormalizado.includes(keyword));
+            const noDRK = !r.nombreNormalizado.includes('DRK');
+            const coincide = comercialObj.keywords.some(keyword => r.nombreNormalizado.includes(keyword));
+            return noDRK && coincide;
         });
         
         if (tarifasComercial.length > 0) {
-            // Ordenar por coste y tomar la más barata
+            // Ordenar por coste y tomar SOLO la más barata
             tarifasComercial.sort((a, b) => a.costeAnual - b.costeAnual);
             const mejorTarifa = tarifasComercial[0];
             
-            resultados.push(mejorTarifa);
-            console.log(`✅ ${resultados.length}º: ${mejorTarifa.comercializadora} - ${mejorTarifa.costeAnual.toFixed(2)}€/año`);
+            otrasComercializadoras.push(mejorTarifa);
+            console.log(`✅ ${comercialObj.nombre}: ${mejorTarifa.descripcion || mejorTarifa.comercializadora} - ${mejorTarifa.costeAnual.toFixed(2)}€/año`);
         }
     }
     
-    // Limitar a máximo 8 comercializadoras
+    // Ordenar otras comercializadoras por precio
+    otrasComercializadoras.sort((a, b) => a.costeAnual - b.costeAnual);
+    
+    // PASO 5: Combinar todo - DRK primero (las 2 ordenadas por precio), luego el resto
+    let resultados = [...drkTarifas, ...otrasComercializadoras];
+    
+    // Limitar a máximo 8
     if (resultados.length > 8) {
         resultados = resultados.slice(0, 8);
     }
     
-    console.log(`📊 Total mostrado: ${resultados.length} comercializadoras`);
+    console.log('📊 RANKING FINAL (orden real por precio):');
+    resultados.forEach((r, i) => {
+        console.log(`  ${i+1}º: ${r.descripcion || r.comercializadora} - ${r.costeAnual.toFixed(2)}€/año (${r.costeMensual.toFixed(2)}€/mes)`);
+    });
     
-    // Obtener mejor y peor precio
+    // Mejor y peor precio del ranking
     const mejorPrecio = resultados[0].costeAnual;
     const peorPrecio = resultados[resultados.length - 1].costeAnual;
     const ahorroMedio = resultados.reduce((sum, r, i) => {
@@ -22658,7 +22698,7 @@ function generateComparison() {
     document.getElementById('comparison-loading').style.display = 'none';
     
     // Mostrar estadísticas
-    renderComparisonStats(resultados.length, ahorroMedio, resultados[0].comercializadora);
+    renderComparisonStats(resultados.length, ahorroMedio, resultados[0].descripcion || resultados[0].comercializadora);
     
     // Renderizar tabla
     renderComparisonTable(resultados, mejorPrecio);
@@ -22667,7 +22707,7 @@ function generateComparison() {
     renderComparisonChart(resultados, mejorPrecio, peorPrecio);
     
     // Renderizar highlight con precios DRK detallados
-    renderComparisonHighlight(resultados[0], resultados[resultados.length - 1], mejorPrecio, peorPrecio, drkIndex, drkFijo);
+    renderComparisonHighlight(resultados[0], resultados[resultados.length - 1], mejorPrecio, peorPrecio, mejorDRKIndex, mejorDRKFijo);
 }
 
 function renderComparisonStats(numTarifas, ahorroMedio, mejorComercializadora) {
@@ -22710,25 +22750,46 @@ function renderComparisonTable(resultados, mejorPrecio) {
     
     document.getElementById('comparison-table-container').style.display = 'block';
     
-    resultados.forEach((r, index) => {
-        // Siempre destacar la primera (que será DRK INDEX)
+    resultados.forEach((resultado, index) => {
+        // Destacar DRK INDEX (primera) y DRK FIJO (segunda)
         const isBest = index === 0;
-        const diferencia = r.costeAnual - mejorPrecio;
+        const isSecondBest = index === 1 && resultado.nombreNormalizado && resultado.nombreNormalizado.includes('DRK');
+        
+        // Calcular diferencia usando los datos INDIVIDUALES de cada resultado
+        const diferencia = resultado.costeAnual - mejorPrecio;
         
         const row = document.createElement('tr');
-        row.className = isBest ? 'comp-table-row best-row' : 'comp-table-row';
+        // Aplicar estilo especial si es DRK (primera o segunda posición)
+        if (isBest || isSecondBest) {
+            row.className = 'comp-table-row best-row';
+        } else {
+            row.className = 'comp-table-row';
+        }
+        
+        // Mostrar descripción si existe, sino el nombre de comercializadora
+        const nombreMostrar = resultado.descripcion && resultado.descripcion.trim() !== '' 
+            ? resultado.descripcion
+            : resultado.comercializadora;
+        
+        // Badge apropiado
+        let badge = '';
+        if (isBest) {
+            badge = '<span class="badge-winner" data-translate="comp-best-badge">MEJOR PRECIO</span>';
+        } else if (isSecondBest) {
+            badge = '<span style="display: inline-block; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: white; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 700; margin-left: 0.5rem;">2ª MEJOR</span>';
+        }
         
         row.innerHTML = `
             <td style="padding: 1.25rem 1rem;">
-                <strong style="font-size: ${isBest ? '1.125rem' : '1rem'};">${r.comercializadora}</strong>
-                ${isBest ? '<span class="badge-winner" data-translate="comp-best-badge">MEJOR PRECIO</span>' : ''}
+                <strong style="font-size: ${isBest || isSecondBest ? '1.125rem' : '1rem'};">${nombreMostrar}</strong>
+                ${badge}
             </td>
-            <td style="padding: 1.25rem 1rem; text-align: center; font-weight: 600;">${r.costeMensual.toFixed(2)}€</td>
-            <td style="padding: 1.25rem 1rem; text-align: center; font-weight: 600; font-size: ${isBest ? '1.125rem' : '1rem'}; color: ${isBest ? '#10b981' : '#1e293b'};">
-                ${r.costeAnual.toFixed(2)}€
+            <td style="padding: 1.25rem 1rem; text-align: center; font-weight: 600;">${resultado.costeMensual.toFixed(2)}€</td>
+            <td style="padding: 1.25rem 1rem; text-align: center; font-weight: 600; font-size: ${isBest ? '1.125rem' : '1rem'}; color: ${isBest || isSecondBest ? '#10b981' : '#1e293b'};">
+                ${resultado.costeAnual.toFixed(2)}€
             </td>
-            <td style="padding: 1.25rem 1rem; text-align: center; font-weight: 700; color: ${isBest ? '#10b981' : '#ef4444'};">
-                ${isBest ? '<span data-translate="comp-reference">Referencia</span>' : '+' + diferencia.toFixed(2) + '€'}
+            <td style="padding: 1.25rem 1rem; text-align: center; font-weight: 700; color: ${isBest ? '#10b981' : (diferencia <= 0 ? '#10b981' : '#ef4444')};">
+                ${isBest ? '<span data-translate="comp-reference">Referencia</span>' : (diferencia >= 0 ? '+' : '') + diferencia.toFixed(2) + '€'}
             </td>
         `;
         
@@ -22747,10 +22808,15 @@ function renderComparisonChart(resultados, mejorPrecio, peorPrecio) {
     const minWidth = 60;
     const range = peorPrecio - mejorPrecio;
     
-    resultados.forEach((r, index) => {
-        // Siempre la primera es la ganadora (DRK INDEX)
+    resultados.forEach((resultado, index) => {
+        // DRK INDEX (primera) y DRK FIJO (segunda) como ganadoras
         const isWinner = index === 0;
-        const porcentaje = range > 0 ? minWidth + ((r.costeAnual - mejorPrecio) / range) * (maxWidth - minWidth) : maxWidth;
+        const isSecondBest = index === 1 && resultado.nombreNormalizado && resultado.nombreNormalizado.includes('DRK');
+        
+        // Calcular porcentaje usando el coste INDIVIDUAL de cada resultado
+        const porcentaje = range > 0 
+            ? minWidth + ((resultado.costeAnual - mejorPrecio) / range) * (maxWidth - minWidth) 
+            : maxWidth;
         
         const colors = [
             'linear-gradient(135deg, #10b981 0%, #059669 100%)', // Verde (ganadora)
@@ -22766,15 +22832,27 @@ function renderComparisonChart(resultados, mejorPrecio, peorPrecio) {
         const colorIndex = Math.min(index, colors.length - 1);
         
         const bar = document.createElement('div');
-        bar.className = isWinner ? 'chart-bar-comp winner-bar' : 'chart-bar-comp';
-        bar.style.width = porcentaje + '%';
-        if (!isWinner) {
+        if (isWinner) {
+            bar.className = 'chart-bar-comp winner-bar';
+        } else if (isSecondBest) {
+            bar.className = 'chart-bar-comp';
+            bar.style.background = colors[1]; // Verde claro para DRK FIJO
+            bar.style.border = '2px solid #16a34a';
+        } else {
+            bar.className = 'chart-bar-comp';
             bar.style.background = colors[colorIndex];
         }
         
+        bar.style.width = porcentaje + '%';
+        
+        // Nombre para el gráfico: descripción si existe, sino comercializadora
+        const nombreMostrar = resultado.descripcion && resultado.descripcion.trim() !== ''
+            ? resultado.descripcion
+            : resultado.comercializadora;
+        
         bar.innerHTML = `
-            <span>${r.comercializadora}</span>
-            <span><strong>${Math.round(r.costeAnual)}€</strong></span>
+            <span style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 1rem;">${nombreMostrar}</span>
+            <span style="white-space: nowrap;"><strong>${Math.round(resultado.costeAnual)}€</strong></span>
         `;
         
         chartContainer.appendChild(bar);
