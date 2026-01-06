@@ -208,6 +208,50 @@
             font-family: 'Outfit', sans-serif;
         }
 
+        /* Selector de idiomas en el panel */
+        .panel-language-selector {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            z-index: 1000;
+        }
+
+        .panel-language-selector select {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.1));
+            backdrop-filter: blur(10px);
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
+            padding: 0.75rem 2.5rem 0.75rem 1rem;
+            border-radius: 0.75rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            appearance: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .panel-language-selector select:hover {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.2));
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .panel-language-selector select option {
+            background: #1e3a8a;
+            color: white;
+        }
+
+        .panel-language-arrow {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: white;
+        }
+
         .logo-container {
             width: 140px;
             height: 140px;
@@ -315,6 +359,16 @@
                 grid-template-columns: 1fr;
                 max-width: 500px;
             }
+            
+            .panel-language-selector {
+                top: 1rem;
+                right: 1rem;
+            }
+            
+            .panel-language-selector select {
+                font-size: 0.875rem;
+                padding: 0.625rem 2rem 0.625rem 0.75rem;
+            }
         }
     </style>
 </head>
@@ -322,6 +376,18 @@
 
 <!-- ========== PANEL DE DEPARTAMENTOS ========== -->
 <div id="panel-view">
+    <!-- Selector de Idiomas -->
+    <div class="panel-language-selector">
+        <select id="panel-language-selector" onchange="changePanelLanguage(this.value)">
+            <option value="es">🇪🇸 Español</option>
+            <option value="en">🇬🇧 English</option>
+            <option value="pt">🇵🇹 Português</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="fr">🇫🇷 Français</option>
+        </select>
+        <span class="panel-language-arrow">▼</span>
+    </div>
+
     <div style="width: 100%; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem;">
         <div style="width: 100%; max-width: 1200px;">
             
@@ -335,8 +401,8 @@
                         </div>
                     </div>
                 </div>
-                <h1 style="font-size: 3rem; font-weight: 800; color: white; margin-bottom: 0.5rem;">DRK Energía</h1>
-                <p style="font-size: 1rem; font-weight: 600; color: #93c5fd; text-transform: uppercase; letter-spacing: 0.3em;">Smart Solutions</p>
+                <h1 style="font-size: 3rem; font-weight: 800; color: white; margin-bottom: 0.5rem;" data-translate="panel-title">DRK Energía</h1>
+                <p style="font-size: 1rem; font-weight: 600; color: #93c5fd; text-transform: uppercase; letter-spacing: 0.3em;" data-translate="panel-subtitle">Smart Solutions</p>
             </div>
 
             <!-- Grid de Departamentos 2x2 -->
@@ -364,13 +430,13 @@
                         </svg>
                     </div>
                     <div>
-                        <p class="dept-label">Optimización</p>
-                        <h3 class="dept-title">Calcula tu Ahorro</h3>
+                        <p class="dept-label" data-translate="dept1-label">Optimización</p>
+                        <h3 class="dept-title" data-translate="dept1-title">Calcula tu Ahorro</h3>
                     </div>
                 </div>
 
                 <!-- Departamento 2: Precios de la Competencia -->
-                <div class="dept-card" onclick="alert('Próximamente: Precios de la Competencia')">
+                <div class="dept-card" onclick="alert(getPanelTranslation('dept2-coming-soon'))">
                     <div class="icon-box">
                         <!-- Icono: Gráfico comparativo -->
                         <svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -386,13 +452,13 @@
                         </svg>
                     </div>
                     <div>
-                        <p class="dept-label">Mercado</p>
-                        <h3 class="dept-title">Precios de la Competencia</h3>
+                        <p class="dept-label" data-translate="dept2-label">Mercado</p>
+                        <h3 class="dept-title" data-translate="dept2-title">Precios de la Competencia</h3>
                     </div>
                 </div>
 
                 <!-- Departamento 3: Email Backoffice -->
-                <div class="dept-card" onclick="alert('Próximamente: Email Backoffice')">
+                <div class="dept-card" onclick="alert(getPanelTranslation('dept3-coming-soon'))">
                     <div class="icon-box">
                         <!-- Icono: Sobre de correo con @ -->
                         <svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -405,13 +471,13 @@
                         </svg>
                     </div>
                     <div>
-                        <p class="dept-label">Contacto</p>
-                        <h3 class="dept-title">Email Backoffice</h3>
+                        <p class="dept-label" data-translate="dept3-label">Contacto</p>
+                        <h3 class="dept-title" data-translate="dept3-title">Email Backoffice</h3>
                     </div>
                 </div>
 
                 <!-- Departamento 4: Código Amigos y Descuentos -->
-                <div class="dept-card" onclick="alert('Próximamente: Código Amigos')">
+                <div class="dept-card" onclick="alert(getPanelTranslation('dept4-coming-soon'))">
                     <div class="icon-box">
                         <!-- Icono: Ticket con descuento -->
                         <svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -425,8 +491,8 @@
                         </svg>
                     </div>
                     <div>
-                        <p class="dept-label">Beneficios</p>
-                        <h3 class="dept-title">Código Amigos y Descuentos</h3>
+                        <p class="dept-label" data-translate="dept4-label">Beneficios</p>
+                        <h3 class="dept-title" data-translate="dept4-title">Código Amigos y Descuentos</h3>
                     </div>
                 </div>
 
@@ -21788,10 +21854,139 @@ ${clientName}
 </div>
 
 <script>
+// ========== SISTEMA DE TRADUCCIÓN DEL PANEL ==========
+const panelTranslations = {
+    es: {
+        'panel-title': 'DRK Energía',
+        'panel-subtitle': 'Smart Solutions',
+        'dept1-label': 'Optimización',
+        'dept1-title': 'Calcula tu Ahorro',
+        'dept2-label': 'Mercado',
+        'dept2-title': 'Precios de la Competencia',
+        'dept2-coming-soon': 'Próximamente: Precios de la Competencia',
+        'dept3-label': 'Contacto',
+        'dept3-title': 'Email Backoffice',
+        'dept3-coming-soon': 'Próximamente: Email Backoffice',
+        'dept4-label': 'Beneficios',
+        'dept4-title': 'Código Amigos y Descuentos',
+        'dept4-coming-soon': 'Próximamente: Código Amigos'
+    },
+    en: {
+        'panel-title': 'DRK Energy',
+        'panel-subtitle': 'Smart Solutions',
+        'dept1-label': 'Optimization',
+        'dept1-title': 'Calculate Your Savings',
+        'dept2-label': 'Market',
+        'dept2-title': 'Competitor Prices',
+        'dept2-coming-soon': 'Coming Soon: Competitor Prices',
+        'dept3-label': 'Contact',
+        'dept3-title': 'Backoffice Email',
+        'dept3-coming-soon': 'Coming Soon: Backoffice Email',
+        'dept4-label': 'Benefits',
+        'dept4-title': 'Friends Code & Discounts',
+        'dept4-coming-soon': 'Coming Soon: Friends Code'
+    },
+    pt: {
+        'panel-title': 'DRK Energia',
+        'panel-subtitle': 'Soluções Inteligentes',
+        'dept1-label': 'Otimização',
+        'dept1-title': 'Calcule Suas Economias',
+        'dept2-label': 'Mercado',
+        'dept2-title': 'Preços da Concorrência',
+        'dept2-coming-soon': 'Em Breve: Preços da Concorrência',
+        'dept3-label': 'Contato',
+        'dept3-title': 'Email Backoffice',
+        'dept3-coming-soon': 'Em Breve: Email Backoffice',
+        'dept4-label': 'Benefícios',
+        'dept4-title': 'Código Amigos e Descontos',
+        'dept4-coming-soon': 'Em Breve: Código Amigos'
+    },
+    zh: {
+        'panel-title': 'DRK 能源',
+        'panel-subtitle': '智能解决方案',
+        'dept1-label': '优化',
+        'dept1-title': '计算您的节省',
+        'dept2-label': '市场',
+        'dept2-title': '竞争对手价格',
+        'dept2-coming-soon': '即将推出：竞争对手价格',
+        'dept3-label': '联系',
+        'dept3-title': '后台电子邮件',
+        'dept3-coming-soon': '即将推出：后台电子邮件',
+        'dept4-label': '优惠',
+        'dept4-title': '朋友代码和折扣',
+        'dept4-coming-soon': '即将推出：朋友代码'
+    },
+    fr: {
+        'panel-title': 'DRK Énergie',
+        'panel-subtitle': 'Solutions Intelligentes',
+        'dept1-label': 'Optimisation',
+        'dept1-title': 'Calculez Vos Économies',
+        'dept2-label': 'Marché',
+        'dept2-title': 'Prix de la Concurrence',
+        'dept2-coming-soon': 'Prochainement: Prix de la Concurrence',
+        'dept3-label': 'Contact',
+        'dept3-title': 'Email Backoffice',
+        'dept3-coming-soon': 'Prochainement: Email Backoffice',
+        'dept4-label': 'Avantages',
+        'dept4-title': 'Code Amis et Réductions',
+        'dept4-coming-soon': 'Prochainement: Code Amis'
+    }
+};
+
+let currentPanelLanguage = 'es';
+
+function getPanelTranslation(key) {
+    return panelTranslations[currentPanelLanguage][key] || panelTranslations['es'][key];
+}
+
+function translatePanel() {
+    const elements = document.querySelectorAll('[data-translate]');
+    elements.forEach(element => {
+        const key = element.getAttribute('data-translate');
+        const translation = getPanelTranslation(key);
+        if (translation) {
+            element.textContent = translation;
+        }
+    });
+}
+
+function changePanelLanguage(lang) {
+    currentPanelLanguage = lang;
+    translatePanel();
+    
+    // Guardar idioma para cuando entre a la calculadora
+    localStorage.setItem('selectedLanguage', lang);
+    
+    console.log('✅ Idioma del panel cambiado a:', lang);
+}
+
+// Cargar idioma guardado al inicio
+document.addEventListener('DOMContentLoaded', function() {
+    const savedLang = localStorage.getItem('selectedLanguage') || 'es';
+    currentPanelLanguage = savedLang;
+    document.getElementById('panel-language-selector').value = savedLang;
+    translatePanel();
+});
+
 // ========== NAVEGACIÓN ENTRE PANEL Y CALCULADORA ==========
 function showCalculator() {
     document.body.classList.add('showing-calculator');
     window.scrollTo(0, 0);
+    
+    // Sincronizar idioma con la calculadora
+    setTimeout(() => {
+        const savedLang = localStorage.getItem('selectedLanguage') || 'es';
+        if (window.LANG && typeof window.LANG.change === 'function') {
+            window.LANG.change(savedLang, true);
+            console.log('✅ Idioma sincronizado con calculadora:', savedLang);
+        }
+        
+        // También actualizar el selector de idiomas de la calculadora
+        const calcSelector = document.getElementById('language-selector');
+        if (calcSelector) {
+            calcSelector.value = savedLang;
+        }
+    }, 100);
 }
 
 function showPanel() {
