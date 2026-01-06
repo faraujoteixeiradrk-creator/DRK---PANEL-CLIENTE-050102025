@@ -22201,7 +22201,7 @@ const panelTranslations = {
         'comp-benefit-3-desc': 'Compara y elige la opción que más te conviene',
         'comp-footer-note': '<strong>Nota metodológica:</strong> Precios reales extraídos de tarifas públicas vigentes sin IVA. Cliente tipo: 6 kW potencia contratada, consumo mensual 270 kWh (60 kWh punta, 90 kWh llano, 120 kWh valle). Datos actualizados automáticamente. Los precios pueden variar según promociones específicas.',
         'comp-stats-companies': 'Comercializadoras',
-        'comp-stats-analyzed': 'Analizadas',
+        'comp-stats-analyzed': 'Seleccionadas',
         'comp-stats-avg-savings': 'Ahorro Medio Anual',
         'comp-stats-best': 'Mejor Opción',
         'comp-best-badge': 'MEJOR PRECIO',
@@ -22249,7 +22249,7 @@ const panelTranslations = {
         'comp-benefit-3-desc': 'Compare and choose the best option for you',
         'comp-footer-note': '<strong>Methodological note:</strong> Real prices from current public tariffs without VAT. Standard client: 6 kW contracted power, monthly consumption 270 kWh (60 kWh peak, 90 kWh standard, 120 kWh valley). Automatically updated data. Prices may vary according to specific promotions.',
         'comp-stats-companies': 'Companies',
-        'comp-stats-analyzed': 'Analyzed',
+        'comp-stats-analyzed': 'Selected',
         'comp-stats-avg-savings': 'Average Annual Savings',
         'comp-stats-best': 'Best Option',
         'comp-best-badge': 'BEST PRICE',
@@ -22297,7 +22297,7 @@ const panelTranslations = {
         'comp-benefit-3-desc': 'Compare e escolha a melhor opção para você',
         'comp-footer-note': '<strong>Nota metodológica:</strong> Preços reais de tarifas públicas vigentes sem IVA. Cliente padrão: 6 kW potência contratada, consumo mensal 270 kWh (60 kWh ponta, 90 kWh padrão, 120 kWh vale). Dados atualizados automaticamente. Os preços podem variar segundo promoções específicas.',
         'comp-stats-companies': 'Empresas',
-        'comp-stats-analyzed': 'Analisadas',
+        'comp-stats-analyzed': 'Selecionadas',
         'comp-stats-avg-savings': 'Economia Média Anual',
         'comp-stats-best': 'Melhor Opção',
         'comp-best-badge': 'MELHOR PREÇO',
@@ -22345,7 +22345,7 @@ const panelTranslations = {
         'comp-benefit-3-desc': '比较并选择最适合您的选项',
         'comp-footer-note': '<strong>方法说明：</strong>不含增值税的当前公共费率的真实价格。标准客户：6千瓦合同功率，月消费270千瓦时（60千瓦时高峰，90千瓦时标准，120千瓦时低谷）。自动更新数据。价格可能根据具体促销而有所不同。',
         'comp-stats-companies': '公司',
-        'comp-stats-analyzed': '已分析',
+        'comp-stats-analyzed': '已选择',
         'comp-stats-avg-savings': '平均年节省',
         'comp-stats-best': '最佳选择',
         'comp-best-badge': '最佳价格',
@@ -22393,7 +22393,7 @@ const panelTranslations = {
         'comp-benefit-3-desc': 'Comparez et choisissez la meilleure option pour vous',
         'comp-footer-note': '<strong>Note méthodologique:</strong> Prix réels des tarifs publics en vigueur sans TVA. Client type: 6 kW puissance contractée, consommation mensuelle 270 kWh (60 kWh pointe, 90 kWh standard, 120 kWh vallée). Données automatiquement mises à jour. Les prix peuvent varier selon les promotions spécifiques.',
         'comp-stats-companies': 'Entreprises',
-        'comp-stats-analyzed': 'Analysées',
+        'comp-stats-analyzed': 'Sélectionnées',
         'comp-stats-avg-savings': 'Économies Moyennes Annuelles',
         'comp-stats-best': 'Meilleure Option',
         'comp-best-badge': 'MEILLEUR PRIX',
@@ -22564,14 +22564,17 @@ function generateComparison() {
     console.log(`📋 ${tarifas.length} tarifas disponibles para comparar`);
     
     // Calcular coste para cada tarifa usando la función real del calculador
-    const resultados = tarifas.map(tarifa => {
+    const todosResultados = tarifas.map(tarifa => {
         try {
             const resultado = calculateTariffCost(tarifa, clienteTipo, '2.0TD');
             return {
                 comercializadora: tarifa.comercializadora || tarifa.name || 'Sin nombre',
                 costeMensual: resultado.totalPeriod,
                 costeAnual: resultado.totalAnnual,
-                resultado: resultado
+                resultado: resultado,
+                esDRK: (tarifa.comercializadora || tarifa.name || '').toUpperCase().includes('DRK'),
+                esIndexado: (tarifa.comercializadora || tarifa.name || '').toUpperCase().includes('INDEX'),
+                esFijo: (tarifa.comercializadora || tarifa.name || '').toUpperCase().includes('FIJ')
             };
         } catch (err) {
             console.error('Error calculando tarifa:', tarifa, err);
@@ -22580,9 +22583,38 @@ function generateComparison() {
     }).filter(r => r !== null);
     
     // Ordenar de más barata a más cara
+    todosResultados.sort((a, b) => a.costeAnual - b.costeAnual);
+    
+    // FILTRAR SOLO 6 COMERCIALIZADORAS - Discriminar a favor de DRK
+    let resultados = [];
+    
+    // 1. Buscar todas las tarifas DRK
+    const tarifasDRK = todosResultados.filter(r => r.esDRK);
+    
+    // 2. Obtener las NO-DRK
+    const tarifasNoDRK = todosResultados.filter(r => !r.esDRK);
+    
+    // 3. Estrategia: Incluir todas las DRK + las 5 más baratas de NO-DRK
+    // Esto asegura que DRK siempre aparezca y se compare con las mejores del mercado
+    
+    if (tarifasDRK.length > 0) {
+        // Incluir todas las DRK (normalmente serán 2: indexado y fijo)
+        resultados = [...tarifasDRK];
+        
+        // Añadir las mejores NO-DRK hasta completar 6
+        const espaciosRestantes = 6 - tarifasDRK.length;
+        if (espaciosRestantes > 0 && tarifasNoDRK.length > 0) {
+            resultados.push(...tarifasNoDRK.slice(0, espaciosRestantes));
+        }
+    } else {
+        // Si no hay DRK (caso raro), solo mostrar las 6 mejores
+        resultados = todosResultados.slice(0, 6);
+    }
+    
+    // Reordenar de más barata a más cara
     resultados.sort((a, b) => a.costeAnual - b.costeAnual);
     
-    console.log('📊 Resultados ordenados:', resultados.length);
+    console.log(`📊 Mostrando ${resultados.length} comercializadoras seleccionadas`);
     
     // Obtener mejor y peor precio
     const mejorPrecio = resultados[0].costeAnual;
@@ -22591,6 +22623,10 @@ function generateComparison() {
         if (i === 0) return sum; // No incluir el mejor
         return sum + (r.costeAnual - mejorPrecio);
     }, 0) / (resultados.length - 1);
+    
+    // Buscar tarifas DRK específicas para el resumen
+    const drkIndexado = todosResultados.find(r => r.esDRK && r.esIndexado);
+    const drkFijo = todosResultados.find(r => r.esDRK && r.esFijo);
     
     // Ocultar loading
     document.getElementById('comparison-loading').style.display = 'none';
@@ -22604,8 +22640,8 @@ function generateComparison() {
     // Renderizar gráfico
     renderComparisonChart(resultados, mejorPrecio, peorPrecio);
     
-    // Renderizar highlight
-    renderComparisonHighlight(resultados[0], resultados[resultados.length - 1], mejorPrecio, peorPrecio);
+    // Renderizar highlight con precios DRK
+    renderComparisonHighlight(resultados[0], resultados[resultados.length - 1], mejorPrecio, peorPrecio, drkIndexado, drkFijo);
 }
 
 function renderComparisonStats(numTarifas, ahorroMedio, mejorComercializadora) {
@@ -22615,10 +22651,10 @@ function renderComparisonStats(numTarifas, ahorroMedio, mejorComercializadora) {
     statsContainer.innerHTML = `
         <div class="comparison-stat-box">
             <div style="font-size: 2.5rem; font-weight: 900; color: #2563eb; margin-bottom: 0.5rem;">
-                ${numTarifas}
+                6
             </div>
             <div style="font-size: 0.875rem; color: #64748b; font-weight: 600;">
-                <span data-translate="comp-stats-companies">Comercializadoras</span> <span data-translate="comp-stats-analyzed">Analizadas</span>
+                <span data-translate="comp-stats-companies">Comercializadoras</span> <span data-translate="comp-stats-analyzed">Seleccionadas</span>
             </div>
         </div>
         <div class="comparison-stat-box">
@@ -22716,10 +22752,41 @@ function renderComparisonChart(resultados, mejorPrecio, peorPrecio) {
     });
 }
 
-function renderComparisonHighlight(mejor, peor, mejorPrecio, peorPrecio) {
+function renderComparisonHighlight(mejor, peor, mejorPrecio, peorPrecio, drkIndexado, drkFijo) {
     const highlightContainer = document.getElementById('comparison-highlight');
     const ahorro = peorPrecio - mejorPrecio;
     const ahorro5anos = ahorro * 5;
+    
+    let drkPricesHTML = '';
+    
+    // Mostrar precios DRK si están disponibles
+    if (drkIndexado || drkFijo) {
+        drkPricesHTML = '<div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid #059669;">';
+        drkPricesHTML += '<h4 style="font-size: 1.125rem; font-weight: 700; color: #047857; margin-bottom: 1rem;">📊 Precios DRK Energía</h4>';
+        drkPricesHTML += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">';
+        
+        if (drkIndexado) {
+            drkPricesHTML += `
+                <div style="background: rgba(16, 185, 129, 0.1); padding: 1rem; border-radius: 0.75rem; border: 2px solid #10b981;">
+                    <div style="font-size: 0.75rem; font-weight: 600; color: #047857; text-transform: uppercase; margin-bottom: 0.25rem;">DRK Indexado</div>
+                    <div style="font-size: 1.5rem; font-weight: 900; color: #047857;">${Math.round(drkIndexado.costeAnual)}€<span style="font-size: 0.875rem; font-weight: 600;">/año</span></div>
+                    <div style="font-size: 0.75rem; color: #059669; margin-top: 0.25rem;">${drkIndexado.costeMensual.toFixed(2)}€/mes</div>
+                </div>
+            `;
+        }
+        
+        if (drkFijo) {
+            drkPricesHTML += `
+                <div style="background: rgba(16, 185, 129, 0.1); padding: 1rem; border-radius: 0.75rem; border: 2px solid #10b981;">
+                    <div style="font-size: 0.75rem; font-weight: 600; color: #047857; text-transform: uppercase; margin-bottom: 0.25rem;">DRK Fijo</div>
+                    <div style="font-size: 1.5rem; font-weight: 900; color: #047857;">${Math.round(drkFijo.costeAnual)}€<span style="font-size: 0.875rem; font-weight: 600;">/año</span></div>
+                    <div style="font-size: 0.75rem; color: #059669; margin-top: 0.25rem;">${drkFijo.costeMensual.toFixed(2)}€/mes</div>
+                </div>
+            `;
+        }
+        
+        drkPricesHTML += '</div></div>';
+    }
     
     highlightContainer.innerHTML = `
         <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: #047857;">
@@ -22730,10 +22797,11 @@ function renderComparisonHighlight(mejor, peor, mejorPrecio, peorPrecio) {
             mientras que con <strong>${peor.comercializadora}</strong> pagaría <strong>${Math.round(peorPrecio)}€</strong>. 
             Eso son <strong>${Math.round(ahorro)}€ de diferencia</strong> que permanecen en tu bolsillo cada año.
         </p>
-        <p style="color: #065f46; line-height: 1.6;">
+        <p style="color: #065f46; line-height: 1.6; margin-bottom: ${drkPricesHTML ? '0' : '1rem'};">
             <strong>En 5 años, el ahorro acumulado sería de ${Math.round(ahorro5anos)}€</strong>. 
             Estos números son reales y están calculados con las tarifas actuales de cada comercializadora.
         </p>
+        ${drkPricesHTML}
     `;
     
     translatePanel(); // Retraducir
