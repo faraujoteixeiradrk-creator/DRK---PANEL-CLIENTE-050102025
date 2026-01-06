@@ -354,6 +354,141 @@
             box-shadow: 0 6px 16px rgba(37, 99, 235, 0.6);
         }
 
+        /* Modal Email Backoffice */
+        .email-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .email-modal.active {
+            display: flex;
+        }
+
+        .email-modal-content {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .email-modal-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .email-modal-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .email-modal-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #1e293b;
+        }
+
+        .email-modal-subtitle {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-top: 0.25rem;
+        }
+
+        .email-form-group {
+            margin-bottom: 1rem;
+        }
+
+        .email-form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 0.5rem;
+        }
+
+        .email-form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .email-form-input:focus {
+            outline: none;
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+
+        .email-modal-buttons {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+
+        .email-btn {
+            flex: 1;
+            padding: 0.875rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+
+        .email-btn-cancel {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .email-btn-cancel:hover {
+            background: #e2e8f0;
+        }
+
+        .email-btn-send {
+            background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+            color: white;
+        }
+
+        .email-btn-send:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+        }
+
         @media (max-width: 768px) {
             .grid-container {
                 grid-template-columns: 1fr;
@@ -368,6 +503,23 @@
             .panel-language-selector select {
                 font-size: 0.875rem;
                 padding: 0.625rem 2rem 0.625rem 0.75rem;
+            }
+            
+            .email-modal-content {
+                padding: 1.5rem;
+                margin: 1rem;
+            }
+            
+            .email-modal-title {
+                font-size: 1.25rem;
+            }
+            
+            .email-modal-buttons {
+                flex-direction: column;
+            }
+            
+            .email-btn {
+                width: 100%;
             }
         }
     </style>
@@ -458,7 +610,7 @@
                 </div>
 
                 <!-- Departamento 3: Email Backoffice -->
-                <div class="dept-card" onclick="alert(getPanelTranslation('dept3-coming-soon'))">
+                <div class="dept-card" onclick="openEmailModal()">
                     <div class="icon-box">
                         <!-- Icono: Sobre de correo con @ -->
                         <svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -21869,7 +22021,15 @@ const panelTranslations = {
         'dept3-coming-soon': 'Próximamente: Email Backoffice',
         'dept4-label': 'Beneficios',
         'dept4-title': 'Código Amigos y Descuentos',
-        'dept4-coming-soon': 'Próximamente: Código Amigos'
+        'dept4-coming-soon': 'Próximamente: Código Amigos',
+        'email-modal-title': 'Email Backoffice',
+        'email-modal-subtitle': 'Datos del Cliente (opcional)',
+        'email-label-name': 'Nombre y Apellidos',
+        'email-label-email': 'Email',
+        'email-label-phone': 'Teléfono',
+        'email-btn-cancel': 'Cancelar',
+        'email-btn-send': 'Abrir Email',
+        'email-optional-note': 'Los campos son opcionales. Puedes enviar el email sin rellenarlos.'
     },
     en: {
         'panel-title': 'DRK Energy',
@@ -21884,7 +22044,15 @@ const panelTranslations = {
         'dept3-coming-soon': 'Coming Soon: Backoffice Email',
         'dept4-label': 'Benefits',
         'dept4-title': 'Friends Code & Discounts',
-        'dept4-coming-soon': 'Coming Soon: Friends Code'
+        'dept4-coming-soon': 'Coming Soon: Friends Code',
+        'email-modal-title': 'Backoffice Email',
+        'email-modal-subtitle': 'Client Data (optional)',
+        'email-label-name': 'Full Name',
+        'email-label-email': 'Email',
+        'email-label-phone': 'Phone',
+        'email-btn-cancel': 'Cancel',
+        'email-btn-send': 'Open Email',
+        'email-optional-note': 'Fields are optional. You can send the email without filling them.'
     },
     pt: {
         'panel-title': 'DRK Energia',
@@ -21899,7 +22067,15 @@ const panelTranslations = {
         'dept3-coming-soon': 'Em Breve: Email Backoffice',
         'dept4-label': 'Benefícios',
         'dept4-title': 'Código Amigos e Descontos',
-        'dept4-coming-soon': 'Em Breve: Código Amigos'
+        'dept4-coming-soon': 'Em Breve: Código Amigos',
+        'email-modal-title': 'Email Backoffice',
+        'email-modal-subtitle': 'Dados do Cliente (opcional)',
+        'email-label-name': 'Nome Completo',
+        'email-label-email': 'Email',
+        'email-label-phone': 'Telefone',
+        'email-btn-cancel': 'Cancelar',
+        'email-btn-send': 'Abrir Email',
+        'email-optional-note': 'Os campos são opcionais. Você pode enviar o email sem preenchê-los.'
     },
     zh: {
         'panel-title': 'DRK 能源',
@@ -21914,7 +22090,15 @@ const panelTranslations = {
         'dept3-coming-soon': '即将推出：后台电子邮件',
         'dept4-label': '优惠',
         'dept4-title': '朋友代码和折扣',
-        'dept4-coming-soon': '即将推出：朋友代码'
+        'dept4-coming-soon': '即将推出：朋友代码',
+        'email-modal-title': '后台电子邮件',
+        'email-modal-subtitle': '客户数据（可选）',
+        'email-label-name': '全名',
+        'email-label-email': '电子邮件',
+        'email-label-phone': '电话',
+        'email-btn-cancel': '取消',
+        'email-btn-send': '打开电子邮件',
+        'email-optional-note': '字段为可选。您可以不填写即发送电子邮件。'
     },
     fr: {
         'panel-title': 'DRK Énergie',
@@ -21929,7 +22113,15 @@ const panelTranslations = {
         'dept3-coming-soon': 'Prochainement: Email Backoffice',
         'dept4-label': 'Avantages',
         'dept4-title': 'Code Amis et Réductions',
-        'dept4-coming-soon': 'Prochainement: Code Amis'
+        'dept4-coming-soon': 'Prochainement: Code Amis',
+        'email-modal-title': 'Email Backoffice',
+        'email-modal-subtitle': 'Données du Client (optionnel)',
+        'email-label-name': 'Nom Complet',
+        'email-label-email': 'Email',
+        'email-label-phone': 'Téléphone',
+        'email-btn-cancel': 'Annuler',
+        'email-btn-send': 'Ouvrir Email',
+        'email-optional-note': 'Les champs sont optionnels. Vous pouvez envoyer l\'email sans les remplir.'
     }
 };
 
@@ -22013,7 +22205,193 @@ function showPanel() {
     document.body.classList.remove('showing-calculator');
     window.scrollTo(0, 0);
 }
+
+// ========== EMAIL BACKOFFICE MODAL ==========
+function openEmailModal() {
+    // Traducir el modal antes de abrirlo
+    translatePanel();
+    
+    document.getElementById('email-modal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeEmailModal() {
+    document.getElementById('email-modal').classList.remove('active');
+    document.body.style.overflow = 'auto';
+    
+    // Limpiar formulario
+    document.getElementById('client-name').value = '';
+    document.getElementById('client-email').value = '';
+    document.getElementById('client-phone').value = '';
+}
+
+function sendEmail() {
+    // Obtener datos del formulario (opcionales)
+    const clientName = document.getElementById('client-name').value.trim();
+    const clientEmail = document.getElementById('client-email').value.trim();
+    const clientPhone = document.getElementById('client-phone').value.trim();
+    
+    // Preparar destinatarios
+    const recipients = [
+        'Rguerra@drk.es',
+        'f.araujo@drk.es',
+        'l.grande@drk.es'
+    ];
+    
+    // Textos traducidos para el email
+    const emailTexts = {
+        es: {
+            subject: 'Solicitud de mejora de precios – Cliente',
+            greeting: 'Estimado equipo de DRK,',
+            intro: 'Me pongo en contacto con ustedes para solicitar información sobre sus tarifas energéticas y posibles mejoras en mis condiciones actuales.',
+            contactDataHeader: 'Mis datos de contacto son:',
+            name: 'Nombre',
+            email: 'Email',
+            phone: 'Teléfono',
+            closing: 'Quedo a la espera de su respuesta.',
+            farewell: 'Atentamente'
+        },
+        en: {
+            subject: 'Request for price improvement – Client',
+            greeting: 'Dear DRK Team,',
+            intro: 'I am contacting you to request information about your energy rates and possible improvements to my current conditions.',
+            contactDataHeader: 'My contact details are:',
+            name: 'Name',
+            email: 'Email',
+            phone: 'Phone',
+            closing: 'I look forward to your response.',
+            farewell: 'Best regards'
+        },
+        pt: {
+            subject: 'Solicitação de melhoria de preços – Cliente',
+            greeting: 'Prezada equipe DRK,',
+            intro: 'Entro em contato para solicitar informações sobre suas tarifas de energia e possíveis melhorias nas minhas condições atuais.',
+            contactDataHeader: 'Meus dados de contato são:',
+            name: 'Nome',
+            email: 'Email',
+            phone: 'Telefone',
+            closing: 'Aguardo sua resposta.',
+            farewell: 'Atenciosamente'
+        },
+        zh: {
+            subject: '价格改进请求 – 客户',
+            greeting: '亲爱的DRK团队，',
+            intro: '我联系您是为了询问您的能源费率信息以及改善我目前条件的可能性。',
+            contactDataHeader: '我的联系方式是：',
+            name: '姓名',
+            email: '电子邮件',
+            phone: '电话',
+            closing: '期待您的回复。',
+            farewell: '此致敬礼'
+        },
+        fr: {
+            subject: 'Demande d\'amélioration des prix – Client',
+            greeting: 'Chère équipe DRK,',
+            intro: 'Je vous contacte pour demander des informations sur vos tarifs énergétiques et les améliorations possibles de mes conditions actuelles.',
+            contactDataHeader: 'Mes coordonnées sont :',
+            name: 'Nom',
+            email: 'Email',
+            phone: 'Téléphone',
+            closing: 'Dans l\'attente de votre réponse.',
+            farewell: 'Cordialement'
+        }
+    };
+    
+    // Obtener idioma actual
+    const currentLang = currentPanelLanguage || 'es';
+    const texts = emailTexts[currentLang] || emailTexts['es'];
+    
+    // Asunto del email
+    const subject = texts.subject;
+    
+    // Cuerpo del email
+    let body = texts.greeting + '\n\n';
+    body += texts.intro + '\n\n';
+    
+    // Agregar datos del cliente si se rellenaron
+    if (clientName || clientEmail || clientPhone) {
+        body += texts.contactDataHeader + '\n';
+        if (clientName) body += '• ' + texts.name + ': ' + clientName + '\n';
+        if (clientEmail) body += '• ' + texts.email + ': ' + clientEmail + '\n';
+        if (clientPhone) body += '• ' + texts.phone + ': ' + clientPhone + '\n';
+        body += '\n';
+    }
+    
+    body += texts.closing + '\n\n';
+    body += texts.farewell;
+    
+    // Crear el mailto link
+    const mailtoLink = 'mailto:' + recipients.join(',') + 
+                      '?subject=' + encodeURIComponent(subject) + 
+                      '&body=' + encodeURIComponent(body);
+    
+    // Abrir cliente de correo
+    window.location.href = mailtoLink;
+    
+    // Cerrar modal después de un breve delay
+    setTimeout(() => {
+        closeEmailModal();
+    }, 500);
+}
+
+// Cerrar modal al hacer clic fuera
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('email-modal');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeEmailModal();
+            }
+        });
+    }
+});
 </script>
+
+<!-- Modal Email Backoffice -->
+<div id="email-modal" class="email-modal">
+    <div class="email-modal-content">
+        <div class="email-modal-header">
+            <div class="email-modal-icon">
+                <i class="fas fa-envelope"></i>
+            </div>
+            <div>
+                <h3 class="email-modal-title" data-translate="email-modal-title">Email Backoffice</h3>
+                <p class="email-modal-subtitle" data-translate="email-modal-subtitle">Datos del Cliente (opcional)</p>
+            </div>
+        </div>
+        
+        <form onsubmit="event.preventDefault(); sendEmail();">
+            <div class="email-form-group">
+                <label class="email-form-label" data-translate="email-label-name">Nombre y Apellidos</label>
+                <input type="text" id="client-name" class="email-form-input" placeholder="Ej: Juan García López">
+            </div>
+            
+            <div class="email-form-group">
+                <label class="email-form-label" data-translate="email-label-email">Email</label>
+                <input type="email" id="client-email" class="email-form-input" placeholder="Ej: juan@email.com">
+            </div>
+            
+            <div class="email-form-group">
+                <label class="email-form-label" data-translate="email-label-phone">Teléfono</label>
+                <input type="tel" id="client-phone" class="email-form-input" placeholder="Ej: +34 600 123 456">
+            </div>
+            
+            <div class="email-modal-buttons">
+                <button type="button" class="email-btn email-btn-cancel" onclick="closeEmailModal()">
+                    <span data-translate="email-btn-cancel">Cancelar</span>
+                </button>
+                <button type="submit" class="email-btn email-btn-send">
+                    <i class="fas fa-paper-plane" style="margin-right: 0.5rem;"></i>
+                    <span data-translate="email-btn-send">Abrir Email</span>
+                </button>
+            </div>
+        </form>
+        
+        <p style="font-size: 0.75rem; color: #94a3b8; text-align: center; margin-top: 1rem;" data-translate="email-optional-note">
+            Los campos son opcionales. Puedes enviar el email sin rellenarlos.
+        </p>
+    </div>
+</div>
 
 </body>
 </html>
