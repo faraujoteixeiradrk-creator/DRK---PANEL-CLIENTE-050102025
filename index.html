@@ -22654,10 +22654,12 @@ function generateComparison() {
     
     for (const comercialObj of comercializadorasObjetivo) {
         // Filtrar TODAS las tarifas de esta comercializadora (excluyendo DRK)
+        // Buscar en NOMBRE y DESCRIPCIÓN
         const tarifasComercial = todosResultados.filter(r => {
             const noDRK = !r.nombreNormalizado.includes('DRK');
-            const coincide = comercialObj.keywords.some(keyword => r.nombreNormalizado.includes(keyword));
-            return noDRK && coincide;
+            const coincideNombre = comercialObj.keywords.some(keyword => r.nombreNormalizado.includes(keyword));
+            const coincideDesc = comercialObj.keywords.some(keyword => r.descripcionNormalizada.includes(keyword));
+            return noDRK && (coincideNombre || coincideDesc);
         });
         
         if (tarifasComercial.length > 0) {
@@ -22665,8 +22667,13 @@ function generateComparison() {
             tarifasComercial.sort((a, b) => a.costeAnual - b.costeAnual);
             const mejorTarifa = tarifasComercial[0];
             
+            // IMPORTANTE: Forzar el nombre de la comercializadora para que sea claro
+            mejorTarifa.nombreComercializadoraForzado = comercialObj.nombre;
+            
             otrasComercializadoras.push(mejorTarifa);
-            console.log(`✅ ${comercialObj.nombre}: ${mejorTarifa.descripcion || mejorTarifa.comercializadora} - ${mejorTarifa.costeAnual.toFixed(2)}€/año`);
+            console.log(`✅ ${comercialObj.nombre}: ${mejorTarifa.descripcion || mejorTarifa.comercializadora} - ${mejorTarifa.costeAnual.toFixed(2)}€/año (${mejorTarifa.costeMensual.toFixed(2)}€/mes)`);
+        } else {
+            console.warn(`⚠️ No se encontró ninguna tarifa para ${comercialObj.nombre}`);
         }
     }
     
@@ -22706,8 +22713,8 @@ function generateComparison() {
     // Renderizar gráfico
     renderComparisonChart(resultados, mejorPrecio, peorPrecio);
     
-    // Renderizar highlight con precios DRK detallados
-    renderComparisonHighlight(resultados[0], resultados[resultados.length - 1], mejorPrecio, peorPrecio, mejorDRKIndex, mejorDRKFijo);
+    // Renderizar highlight con precios DRK detallados y precios de competencia
+    renderComparisonHighlight(resultados[0], resultados[resultados.length - 1], mejorPrecio, peorPrecio, mejorDRKIndex, mejorDRKFijo, resultados);
 }
 
 function renderComparisonStats(numTarifas, ahorroMedio, mejorComercializadora) {
@@ -22766,10 +22773,22 @@ function renderComparisonTable(resultados, mejorPrecio) {
             row.className = 'comp-table-row';
         }
         
-        // Mostrar descripción si existe, sino el nombre de comercializadora
-        const nombreMostrar = resultado.descripcion && resultado.descripcion.trim() !== '' 
-            ? resultado.descripcion
-            : resultado.comercializadora;
+        // Mostrar nombre claro en la tabla
+        let nombreMostrar;
+        if (resultado.nombreComercializadoraForzado) {
+            // Es una comercializadora grande, mostrar: "Endesa" o "Endesa - Tarifa Nombre"
+            if (resultado.descripcion && resultado.descripcion.trim() !== '') {
+                nombreMostrar = `${resultado.nombreComercializadoraForzado} - ${resultado.descripcion}`;
+            } else {
+                nombreMostrar = resultado.nombreComercializadoraForzado;
+            }
+        } else if (resultado.descripcion && resultado.descripcion.trim() !== '') {
+            // DRK o similar, mostrar descripción
+            nombreMostrar = resultado.descripcion;
+        } else {
+            // Fallback: nombre de comercializadora
+            nombreMostrar = resultado.comercializadora;
+        }
         
         // Badge apropiado
         let badge = '';
@@ -22845,10 +22864,15 @@ function renderComparisonChart(resultados, mejorPrecio, peorPrecio) {
         
         bar.style.width = porcentaje + '%';
         
-        // Nombre para el gráfico: descripción si existe, sino comercializadora
-        const nombreMostrar = resultado.descripcion && resultado.descripcion.trim() !== ''
-            ? resultado.descripcion
-            : resultado.comercializadora;
+        // Nombre para el gráfico: comercializadora forzada o descripción
+        let nombreMostrar;
+        if (resultado.nombreComercializadoraForzado) {
+            nombreMostrar = resultado.nombreComercializadoraForzado;
+        } else if (resultado.descripcion && resultado.descripcion.trim() !== '') {
+            nombreMostrar = resultado.descripcion;
+        } else {
+            nombreMostrar = resultado.comercializadora;
+        }
         
         bar.innerHTML = `
             <span style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 1rem;">${nombreMostrar}</span>
@@ -22859,7 +22883,7 @@ function renderComparisonChart(resultados, mejorPrecio, peorPrecio) {
     });
 }
 
-function renderComparisonHighlight(mejor, peor, mejorPrecio, peorPrecio, drkIndexado, drkFijo) {
+function renderComparisonHighlight(mejor, peor, mejorPrecio, peorPrecio, drkIndexado, drkFijo, todosResultados) {
     const highlightContainer = document.getElementById('comparison-highlight');
     const ahorro = peorPrecio - mejorPrecio;
     const ahorro5anos = ahorro * 5;
@@ -22877,10 +22901,13 @@ function renderComparisonHighlight(mejor, peor, mejorPrecio, peorPrecio, drkInde
         if (drkIndexado) {
             const tarifa = drkIndexado.tarifa;
             drkPricesHTML += `
-                <div style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); padding: 1.5rem; border-radius: 1rem; border: 2px solid #10b981;">
+                <div style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); padding: 1.5rem; border-radius: 1rem; border: 3px solid #10b981;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                        <div style="font-size: 1rem; font-weight: 700; color: #047857;">DRK INDEXADO</div>
+                        <div style="font-size: 1rem; font-weight: 700; color: #047857;">🏆 DRK INDEXADO</div>
                         <div style="font-size: 1.5rem; font-weight: 900; color: #047857;">${Math.round(drkIndexado.costeAnual)}€/año</div>
+                    </div>
+                    <div style="background: rgba(16, 185, 129, 0.15); padding: 0.5rem; border-radius: 0.5rem; margin-bottom: 1rem; text-align: center;">
+                        <div style="font-size: 0.75rem; font-weight: 600; color: #047857;">⭐ MEJOR OPCIÓN DEL MERCADO</div>
                     </div>
                     
                     <div style="margin-bottom: 1rem;">
@@ -22921,6 +22948,9 @@ function renderComparisonHighlight(mejor, peor, mejorPrecio, peorPrecio, drkInde
                         <div style="font-size: 1rem; font-weight: 700; color: #047857;">DRK FIJO</div>
                         <div style="font-size: 1.5rem; font-weight: 900; color: #047857;">${Math.round(drkFijo.costeAnual)}€/año</div>
                     </div>
+                    <div style="background: rgba(16, 185, 129, 0.1); padding: 0.5rem; border-radius: 0.5rem; margin-bottom: 1rem; text-align: center;">
+                        <div style="font-size: 0.75rem; font-weight: 600; color: #059669;">Precio estable garantizado</div>
+                    </div>
                     
                     <div style="margin-bottom: 1rem;">
                         <div style="font-size: 0.75rem; font-weight: 600; color: #059669; text-transform: uppercase; margin-bottom: 0.5rem;">⚡ Potencia</div>
@@ -22955,20 +22985,79 @@ function renderComparisonHighlight(mejor, peor, mejorPrecio, peorPrecio, drkInde
         drkPricesHTML += '</div></div>';
     }
     
+    // NUEVO: Precios de la competencia
+    let competitorPricesHTML = '';
+    if (todosResultados && todosResultados.length > 2) {
+        competitorPricesHTML = '<div style="margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #94a3b8;">';
+        competitorPricesHTML += '<h4 style="font-size: 1.25rem; font-weight: 700; color: #475569; margin-bottom: 1.5rem;">📊 Precios de la Competencia</h4>';
+        
+        competitorPricesHTML += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">';
+        
+        // Mostrar precios de comercializadoras (excluyendo las 2 primeras que son DRK)
+        for (let i = 2; i < todosResultados.length && i < 8; i++) {
+            const r = todosResultados[i];
+            const tarifa = r.tarifa;
+            const nombreComercial = r.nombreComercializadoraForzado || r.comercializadora;
+            
+            competitorPricesHTML += `
+                <div style="background: #f8fafc; padding: 1.25rem; border-radius: 0.75rem; border: 1px solid #e2e8f0;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                        <div style="font-size: 0.875rem; font-weight: 700; color: #1e293b;">${nombreComercial}</div>
+                        <div style="font-size: 1.125rem; font-weight: 900; color: #475569;">${Math.round(r.costeAnual)}€/año</div>
+                    </div>
+                    
+                    <div style="margin-bottom: 0.75rem;">
+                        <div style="font-size: 0.6875rem; font-weight: 600; color: #64748b; text-transform: uppercase; margin-bottom: 0.375rem;">⚡ Potencia</div>
+                        <div style="display: grid; gap: 0.125rem;">
+                            <div style="font-size: 0.75rem; color: #475569;">
+                                P1: <strong>${(tarifa.p_potencia_1 || 0).toFixed(4)} €/kW·año</strong>
+                            </div>
+                            <div style="font-size: 0.75rem; color: #475569;">
+                                P2: <strong>${(tarifa.p_potencia_2 || 0).toFixed(4)} €/kW·año</strong>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div style="font-size: 0.6875rem; font-weight: 600; color: #64748b; text-transform: uppercase; margin-bottom: 0.375rem;">⚡ Energía</div>
+                        <div style="display: grid; gap: 0.125rem;">
+                            <div style="font-size: 0.75rem; color: #475569;">
+                                Punta: <strong>${(tarifa.p1_price || 0).toFixed(4)} €/kWh</strong>
+                            </div>
+                            <div style="font-size: 0.75rem; color: #475569;">
+                                Llano: <strong>${(tarifa.p2_price || 0).toFixed(4)} €/kWh</strong>
+                            </div>
+                            <div style="font-size: 0.75rem; color: #475569;">
+                                Valle: <strong>${(tarifa.p3_price || 0).toFixed(4)} €/kWh</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        competitorPricesHTML += '</div></div>';
+    }
+    
+    // Usar siempre DRK INDEX como referencia en el texto
+    const nombreMejor = mejor.descripcion || mejor.comercializadora;
+    const nombrePeor = peor.nombreComercializadoraForzado || peor.comercializadora;
+    
     highlightContainer.innerHTML = `
         <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: #047857;">
             <i class="fas fa-check-circle"></i> <span data-translate="comp-highlight-title">Ahorro Real y Verificable</span>
         </h3>
         <p style="color: #065f46; margin-bottom: 1rem; line-height: 1.6;">
-            Con <strong>${mejor.comercializadora}</strong>, un cliente tipo paga solo <strong>${Math.round(mejorPrecio)}€ al año</strong>, 
-            mientras que con <strong>${peor.comercializadora}</strong> pagaría <strong>${Math.round(peorPrecio)}€</strong>. 
+            Con <strong>${nombreMejor}</strong>, un cliente tipo paga solo <strong>${Math.round(mejorPrecio)}€ al año</strong>, 
+            mientras que con <strong>${nombrePeor}</strong> pagaría <strong>${Math.round(peorPrecio)}€</strong>. 
             Eso son <strong>${Math.round(ahorro)}€ de diferencia</strong> que permanecen en tu bolsillo cada año.
         </p>
         <p style="color: #065f46; line-height: 1.6; margin-bottom: ${drkPricesHTML ? '0' : '1rem'};">
             <strong>En 5 años, el ahorro acumulado sería de ${Math.round(ahorro5anos)}€</strong>. 
-            Estos números son reales y están calculados con las tarifas actuales de cada comercializadora.
+            Estos números son reales y están calculados con las tarifas actuales del mercado eléctrico español.
         </p>
         ${drkPricesHTML}
+        ${competitorPricesHTML}
     `;
     
     translatePanel(); // Retraducir
