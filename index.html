@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DRK - Panel Departamentos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap');
+        
+        * {
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(180deg, #1e3a8a 0%, #1e40af 100%);
+            min-height: 100vh;
+        }
+
+        /* Sistema de vistas */
+        .view {
+            display: none;
+        }
+        
+        .view.active {
+            display: block;
+        }
+
+        /* Estilos del Panel de Departamentos */
+        .logo-container {
+            width: 140px;
+            height: 140px;
+            background: white;
+            border-radius: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .logo-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 36px;
+            height: 36px;
+            background: #3b82f6;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
+        }
+
+        .dept-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(59, 130, 246, 0.15);
+            border-radius: 2rem;
+            padding: 3rem 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            min-height: 220px;
+        }
+
+        .dept-card:hover {
+            background: rgba(15, 23, 42, 0.8);
+            border-color: rgba(59, 130, 246, 0.4);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .icon-box {
+            width: 80px;
+            height: 80px;
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dept-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: #93c5fd;
+        }
+
+        .dept-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: white;
+            line-height: 1.2;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        /* Estilos de la Calculadora */
+        .calculator-container {
+            background: linear-gradient(180deg, #e0f2fe 0%, #f0f9ff 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .calculator-card {
+            background: white;
+            border-radius: 2.5rem;
+            border: 3px solid #3b82f6;
+            padding: 3rem 2rem;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(59, 130, 246, 0.3);
+            text-align: center;
+            position: relative;
+        }
+
+        .calc-logo-circle {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+        }
+
+        .calc-logo-inner {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .calc-logo-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 8px solid;
+            opacity: 0.8;
+        }
+
+        .ring-1 {
+            border-color: transparent #ef4444 transparent transparent;
+            transform: rotate(0deg);
+        }
+
+        .ring-2 {
+            border-color: transparent transparent #10b981 transparent;
+            transform: rotate(120deg);
+        }
+
+        .ring-3 {
+            border-color: transparent transparent transparent #3b82f6;
+            transform: rotate(240deg);
+        }
+
+        .calc-title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #1e3a8a;
+            margin-bottom: 2rem;
+            letter-spacing: -0.02em;
+        }
+
+        .calc-subtitle {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e3a8a;
+            margin-bottom: 2rem;
+        }
+
+        .calc-button {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            padding: 1.25rem 3rem;
+            border-radius: 1.5rem;
+            font-weight: 700;
+            font-size: 1.125rem;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.4);
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .calc-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(59, 130, 246, 0.6);
+        }
+
+        .calc-button:active {
+            transform: translateY(-1px);
+        }
+
+        .version-tag {
+            position: absolute;
+            bottom: 1.5rem;
+            right: 2rem;
+            color: #94a3b8;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 1.5rem;
+            left: 1.5rem;
+            z-index: 1000;
+            background: linear-gradient(135deg, #2563eb, #1e40af);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 1rem;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.6);
+        }
+
+        @media (max-width: 768px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+                max-width: 500px;
+            }
+            
+            .calc-title {
+                font-size: 2rem;
+            }
+            
+            .calc-subtitle {
+                font-size: 1.25rem;
+            }
+            
+            .calculator-card {
+                padding: 2rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ========== VISTA: PANEL DE DEPARTAMENTOS ========== -->
+<div id="panel-view" class="view active">
+    <div style="width: 100%; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem;">
+        <div style="width: 100%; max-width: 1200px;">
+            
+            <!-- Logo y Branding -->
+            <div style="text-align: center; margin-bottom: 3rem;">
+                <div style="display: flex; justify-content: center; margin-bottom: 2rem;">
+                    <div class="logo-container">
+                        <span style="font-size: 3.5rem; font-weight: 900; color: #1e3a8a; letter-spacing: -0.05em;">DRK</span>
+                        <div class="logo-badge">
+                            <i class="fas fa-bolt" style="color: white; font-size: 1.25rem;"></i>
+                        </div>
+                    </div>
+                </div>
+                <h1 style="font-size: 3rem; font-weight: 800; color: white; margin-bottom: 0.5rem;">DRK Energía</h1>
+                <p style="font-size: 1rem; font-weight: 600; color: #93c5fd; text-transform: uppercase; letter-spacing: 0.3em;">Smart Solutions</p>
+            </div>
+
+            <!-- Grid de Departamentos 2x2 -->
+            <div class="grid-container" style="margin: 0 auto;">
+                
+                <!-- Departamento 1: Calcula tu Ahorro -->
+                <div class="dept-card" onclick="showCalculator()">
+                    <div class="icon-box">
+                        <i class="fas fa-coins" style="font-size: 3rem; color: #60a5fa;"></i>
+                    </div>
+                    <div>
+                        <p class="dept-label">Optimización</p>
+                        <h3 class="dept-title">Calcula tu Ahorro</h3>
+                    </div>
+                </div>
+
+                <!-- Departamento 2: Precios de la Competencia -->
+                <div class="dept-card" onclick="alert('Próximamente: Precios de la Competencia')">
+                    <div class="icon-box">
+                        <i class="fas fa-chart-line" style="font-size: 3rem; color: #22d3ee;"></i>
+                    </div>
+                    <div>
+                        <p class="dept-label">Mercado</p>
+                        <h3 class="dept-title">Precios de la Competencia</h3>
+                    </div>
+                </div>
+
+                <!-- Departamento 3: Email Backoffice -->
+                <div class="dept-card" onclick="alert('Próximamente: Email Backoffice')">
+                    <div class="icon-box">
+                        <i class="fas fa-headset" style="font-size: 3rem; color: #a78bfa;"></i>
+                    </div>
+                    <div>
+                        <p class="dept-label">Contacto</p>
+                        <h3 class="dept-title">Email Backoffice</h3>
+                    </div>
+                </div>
+
+                <!-- Departamento 4: Código Amigos y Descuentos -->
+                <div class="dept-card" onclick="alert('Próximamente: Código Amigos')">
+                    <div class="icon-box">
+                        <i class="fas fa-ticket-alt" style="font-size: 3rem; color: #38bdf8;"></i>
+                    </div>
+                    <div>
+                        <p class="dept-label">Beneficios</p>
+                        <h3 class="dept-title">Código Amigos y Descuentos</h3>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========== VISTA: CALCULADORA "ANALIZA TU HOGAR" ========== -->
+<div id="calculator-view" class="view">
+    <button class="back-button" onclick="showPanel()">
+        <i class="fas fa-arrow-left" style="margin-right: 0.5rem;"></i>Volver al Panel
+    </button>
+    
+    <div class="calculator-container">
+        <div class="calculator-card">
+            
+            <!-- Logo circular con anillos de colores -->
+            <div class="calc-logo-circle">
+                <div class="calc-logo-inner">
+                    <div class="calc-logo-ring ring-1"></div>
+                    <div class="calc-logo-ring ring-2"></div>
+                    <div class="calc-logo-ring ring-3"></div>
+                </div>
+            </div>
+
+            <!-- Título principal -->
+            <h1 class="calc-title">ANALIZA TU HOGAR</h1>
+
+            <!-- Separador -->
+            <div style="width: 100%; height: 1px; background: linear-gradient(to right, transparent, #cbd5e1, transparent); margin-bottom: 2rem;"></div>
+
+            <!-- Subtítulo -->
+            <h2 class="calc-subtitle">HOGAR 2.0 TD</h2>
+
+            <!-- Botón principal -->
+            <button class="calc-button" onclick="alert('Función de escaneo QR - En desarrollo')">
+                <i class="fas fa-camera" style="font-size: 1.5rem;"></i>
+                ESCANEAR QR AHORA
+            </button>
+
+            <!-- Versión -->
+            <div class="version-tag">v2024.12.20</div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+// Sistema de navegación entre vistas
+function showCalculator() {
+    document.getElementById('panel-view').classList.remove('active');
+    document.getElementById('calculator-view').classList.add('active');
+    window.scrollTo(0, 0);
+}
+
+function showPanel() {
+    document.getElementById('calculator-view').classList.remove('active');
+    document.getElementById('panel-view').classList.add('active');
+    window.scrollTo(0, 0);
+}
+
+// Inicializar mostrando el panel
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('panel-view').classList.add('active');
+});
+</script>
+
+</body>
+</html>
