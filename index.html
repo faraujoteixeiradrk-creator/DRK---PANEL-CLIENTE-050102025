@@ -23085,12 +23085,18 @@ function renderComparisonHighlight(mejor, peor, mejorPrecio, peorPrecio, drkInde
     const ahorro = peorPrecio - mejorPrecio;
     const ahorro5anos = ahorro * 5;
     
+    // Función helper para traducción
+    const t = (key) => {
+        const lang = currentLanguage || 'es';
+        return panelTranslations[lang][key] || panelTranslations.es[key] || key;
+    };
+    
     let drkPricesHTML = '';
     
     // Mostrar precios DRK DETALLADOS si están disponibles
     if (drkIndexado || drkFijo) {
         drkPricesHTML = '<div style="margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #059669;">';
-        drkPricesHTML += '<h4 style="font-size: 1.25rem; font-weight: 700; color: #047857; margin-bottom: 1.5rem;">💰 Precios Detallados DRK Energía</h4>';
+        drkPricesHTML += `<h4 style="font-size: 1.25rem; font-weight: 700; color: #047857; margin-bottom: 1.5rem;">💰 ${t('comp-detailed-prices-drk')}</h4>`;
         
         // Crear grid para las dos tarifas DRK
         drkPricesHTML += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">';
@@ -23100,15 +23106,15 @@ function renderComparisonHighlight(mejor, peor, mejorPrecio, peorPrecio, drkInde
             drkPricesHTML += `
                 <div style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); padding: 1.5rem; border-radius: 1rem; border: 3px solid #10b981;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                        <div style="font-size: 1rem; font-weight: 700; color: #047857;">🏆 DRK INDEXADO</div>
-                        <div style="font-size: 1.5rem; font-weight: 900; color: #047857;">${Math.round(drkIndexado.costeAnual)}€/año</div>
+                        <div style="font-size: 1rem; font-weight: 700; color: #047857;">🏆 ${t('comp-drk-indexed')}</div>
+                        <div style="font-size: 1.5rem; font-weight: 900; color: #047857;">${Math.round(drkIndexado.costeAnual)}€/${t('comp-per-year').replace('al año', 'año').replace('per year', 'year').replace('por ano', 'ano').replace('每年', '年').replace('par an', 'an')}</div>
                     </div>
                     <div style="background: rgba(16, 185, 129, 0.15); padding: 0.5rem; border-radius: 0.5rem; margin-bottom: 1rem; text-align: center;">
-                        <div style="font-size: 0.75rem; font-weight: 600; color: #047857;">⭐ MEJOR OPCIÓN DEL MERCADO</div>
+                        <div style="font-size: 0.75rem; font-weight: 600; color: #047857;">⭐ ${t('comp-best-market-option')}</div>
                     </div>
                     
                     <div style="margin-bottom: 1rem;">
-                        <div style="font-size: 0.75rem; font-weight: 600; color: #059669; text-transform: uppercase; margin-bottom: 0.5rem;">⚡ Potencia</div>
+                        <div style="font-size: 0.75rem; font-weight: 600; color: #059669; text-transform: uppercase; margin-bottom: 0.5rem;">⚡ ${t('comp-power')}</div>
                         <div style="display: grid; gap: 0.25rem;">
                             <div style="font-size: 0.875rem; color: #065f46;">
                                 P1: <strong>${(tarifa.p_potencia_1 || 0).toFixed(4)} €/kW·año</strong>
@@ -23120,16 +23126,16 @@ function renderComparisonHighlight(mejor, peor, mejorPrecio, peorPrecio, drkInde
                     </div>
                     
                     <div>
-                        <div style="font-size: 0.75rem; font-weight: 600; color: #059669; text-transform: uppercase; margin-bottom: 0.5rem;">⚡ Energía</div>
+                        <div style="font-size: 0.75rem; font-weight: 600; color: #059669; text-transform: uppercase; margin-bottom: 0.5rem;">⚡ ${t('comp-energy')}</div>
                         <div style="display: grid; gap: 0.25rem;">
                             <div style="font-size: 0.875rem; color: #065f46;">
-                                Punta: <strong>${(tarifa.p1_price || 0).toFixed(4)} €/kWh</strong>
+                                ${t('comp-peak')}: <strong>${(tarifa.p1_price || 0).toFixed(4)} €/kWh</strong>
                             </div>
                             <div style="font-size: 0.875rem; color: #065f46;">
-                                Llano: <strong>${(tarifa.p2_price || 0).toFixed(4)} €/kWh</strong>
+                                ${t('comp-standard')}: <strong>${(tarifa.p2_price || 0).toFixed(4)} €/kWh</strong>
                             </div>
                             <div style="font-size: 0.875rem; color: #065f46;">
-                                Valle: <strong>${(tarifa.p3_price || 0).toFixed(4)} €/kWh</strong>
+                                ${t('comp-valley')}: <strong>${(tarifa.p3_price || 0).toFixed(4)} €/kWh</strong>
                             </div>
                         </div>
                     </div>
@@ -23142,15 +23148,15 @@ function renderComparisonHighlight(mejor, peor, mejorPrecio, peorPrecio, drkInde
             drkPricesHTML += `
                 <div style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); padding: 1.5rem; border-radius: 1rem; border: 2px solid #10b981;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                        <div style="font-size: 1rem; font-weight: 700; color: #047857;">DRK FIJO</div>
-                        <div style="font-size: 1.5rem; font-weight: 900; color: #047857;">${Math.round(drkFijo.costeAnual)}€/año</div>
+                        <div style="font-size: 1rem; font-weight: 700; color: #047857;">${t('comp-drk-fixed')}</div>
+                        <div style="font-size: 1.5rem; font-weight: 900; color: #047857;">${Math.round(drkFijo.costeAnual)}€/${t('comp-per-year').replace('al año', 'año').replace('per year', 'year').replace('por ano', 'ano').replace('每年', '年').replace('par an', 'an')}</div>
                     </div>
                     <div style="background: rgba(16, 185, 129, 0.1); padding: 0.5rem; border-radius: 0.5rem; margin-bottom: 1rem; text-align: center;">
-                        <div style="font-size: 0.75rem; font-weight: 600; color: #059669;">Precio estable garantizado</div>
+                        <div style="font-size: 0.75rem; font-weight: 600; color: #059669;">${t('comp-stable-price')}</div>
                     </div>
                     
                     <div style="margin-bottom: 1rem;">
-                        <div style="font-size: 0.75rem; font-weight: 600; color: #059669; text-transform: uppercase; margin-bottom: 0.5rem;">⚡ Potencia</div>
+                        <div style="font-size: 0.75rem; font-weight: 600; color: #059669; text-transform: uppercase; margin-bottom: 0.5rem;">⚡ ${t('comp-power')}</div>
                         <div style="display: grid; gap: 0.25rem;">
                             <div style="font-size: 0.875rem; color: #065f46;">
                                 P1: <strong>${(tarifa.p_potencia_1 || 0).toFixed(4)} €/kW·año</strong>
@@ -23162,16 +23168,16 @@ function renderComparisonHighlight(mejor, peor, mejorPrecio, peorPrecio, drkInde
                     </div>
                     
                     <div>
-                        <div style="font-size: 0.75rem; font-weight: 600; color: #059669; text-transform: uppercase; margin-bottom: 0.5rem;">⚡ Energía</div>
+                        <div style="font-size: 0.75rem; font-weight: 600; color: #059669; text-transform: uppercase; margin-bottom: 0.5rem;">⚡ ${t('comp-energy')}</div>
                         <div style="display: grid; gap: 0.25rem;">
                             <div style="font-size: 0.875rem; color: #065f46;">
-                                Punta: <strong>${(tarifa.p1_price || 0).toFixed(4)} €/kWh</strong>
+                                ${t('comp-peak')}: <strong>${(tarifa.p1_price || 0).toFixed(4)} €/kWh</strong>
                             </div>
                             <div style="font-size: 0.875rem; color: #065f46;">
-                                Llano: <strong>${(tarifa.p2_price || 0).toFixed(4)} €/kWh</strong>
+                                ${t('comp-standard')}: <strong>${(tarifa.p2_price || 0).toFixed(4)} €/kWh</strong>
                             </div>
                             <div style="font-size: 0.875rem; color: #065f46;">
-                                Valle: <strong>${(tarifa.p3_price || 0).toFixed(4)} €/kWh</strong>
+                                ${t('comp-valley')}: <strong>${(tarifa.p3_price || 0).toFixed(4)} €/kWh</strong>
                             </div>
                         </div>
                     </div>
@@ -23186,7 +23192,7 @@ function renderComparisonHighlight(mejor, peor, mejorPrecio, peorPrecio, drkInde
     let competitorPricesHTML = '';
     if (todosResultados && todosResultados.length > 2) {
         competitorPricesHTML = '<div style="margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #94a3b8;">';
-        competitorPricesHTML += '<h4 style="font-size: 1.25rem; font-weight: 700; color: #475569; margin-bottom: 1.5rem;">📊 Precios de la Competencia</h4>';
+        competitorPricesHTML += `<h4 style="font-size: 1.25rem; font-weight: 700; color: #475569; margin-bottom: 1.5rem;">📊 ${t('comp-competitor-prices')}</h4>`;
         
         competitorPricesHTML += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">';
         
@@ -23205,11 +23211,11 @@ function renderComparisonHighlight(mejor, peor, mejorPrecio, peorPrecio, drkInde
                 <div style="background: #f8fafc; padding: 1.25rem; border-radius: 0.75rem; border: 1px solid #e2e8f0;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
                         <div style="font-size: 0.875rem; font-weight: 700; color: #1e293b;">${nombreComercial}</div>
-                        <div style="font-size: 1.125rem; font-weight: 900; color: #475569;">${Math.round(r.costeAnual)}€/año</div>
+                        <div style="font-size: 1.125rem; font-weight: 900; color: #475569;">${Math.round(r.costeAnual)}€/${t('comp-per-year').replace('al año', 'año').replace('per year', 'year').replace('por ano', 'ano').replace('每年', '年').replace('par an', 'an')}</div>
                     </div>
                     
                     <div style="margin-bottom: 0.75rem;">
-                        <div style="font-size: 0.6875rem; font-weight: 600; color: #64748b; text-transform: uppercase; margin-bottom: 0.375rem;">⚡ Potencia</div>
+                        <div style="font-size: 0.6875rem; font-weight: 600; color: #64748b; text-transform: uppercase; margin-bottom: 0.375rem;">⚡ ${t('comp-power')}</div>
                         <div style="display: grid; gap: 0.125rem;">
                             <div style="font-size: 0.75rem; color: #475569;">
                                 P1: <strong>${(tarifa.p_potencia_1 || 0).toFixed(4)} €/kW·año</strong>
@@ -23221,16 +23227,16 @@ function renderComparisonHighlight(mejor, peor, mejorPrecio, peorPrecio, drkInde
                     </div>
                     
                     <div>
-                        <div style="font-size: 0.6875rem; font-weight: 600; color: #64748b; text-transform: uppercase; margin-bottom: 0.375rem;">⚡ Energía</div>
+                        <div style="font-size: 0.6875rem; font-weight: 600; color: #64748b; text-transform: uppercase; margin-bottom: 0.375rem;">⚡ ${t('comp-energy')}</div>
                         <div style="display: grid; gap: 0.125rem;">
                             <div style="font-size: 0.75rem; color: #475569;">
-                                Punta: <strong>${(tarifa.p1_price || 0).toFixed(4)} €/kWh</strong>
+                                ${t('comp-peak')}: <strong>${(tarifa.p1_price || 0).toFixed(4)} €/kWh</strong>
                             </div>
                             <div style="font-size: 0.75rem; color: #475569;">
-                                Llano: <strong>${(tarifa.p2_price || 0).toFixed(4)} €/kWh</strong>
+                                ${t('comp-standard')}: <strong>${(tarifa.p2_price || 0).toFixed(4)} €/kWh</strong>
                             </div>
                             <div style="font-size: 0.75rem; color: #475569;">
-                                Valle: <strong>${(tarifa.p3_price || 0).toFixed(4)} €/kWh</strong>
+                                ${t('comp-valley')}: <strong>${(tarifa.p3_price || 0).toFixed(4)} €/kWh</strong>
                             </div>
                         </div>
                     </div>
@@ -23247,16 +23253,16 @@ function renderComparisonHighlight(mejor, peor, mejorPrecio, peorPrecio, drkInde
     
     highlightContainer.innerHTML = `
         <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: #047857;">
-            <i class="fas fa-check-circle"></i> <span data-translate="comp-highlight-title">Ahorro Real y Verificable</span>
+            <i class="fas fa-check-circle"></i> <span data-translate="comp-highlight-title">${t('comp-highlight-title')}</span>
         </h3>
         <p style="color: #065f46; margin-bottom: 1rem; line-height: 1.6;">
-            Con <strong>${nombreMejor}</strong>, un cliente tipo paga solo <strong>${Math.round(mejorPrecio)}€ al año</strong>, 
-            mientras que con <strong>${nombrePeor}</strong> pagaría <strong>${Math.round(peorPrecio)}€</strong>. 
-            Eso son <strong>${Math.round(ahorro)}€ de diferencia</strong> que permanecen en tu bolsillo cada año.
+            ${t('comp-with')} <strong>${nombreMejor}</strong>, ${t('comp-typical-client-pays')} <strong>${Math.round(mejorPrecio)}€ ${t('comp-per-year')}</strong>, 
+            ${t('comp-while-with')} <strong>${nombrePeor}</strong> ${t('comp-would-pay')} <strong>${Math.round(peorPrecio)}€</strong>. 
+            ${t('comp-thats')} <strong>${Math.round(ahorro)}€ ${t('comp-difference-pocket')}</strong>.
         </p>
         <p style="color: #065f46; line-height: 1.6; margin-bottom: ${drkPricesHTML ? '0' : '1rem'};">
-            <strong>En 5 años, el ahorro acumulado sería de ${Math.round(ahorro5anos)}€</strong>. 
-            Estos números son reales y están calculados con las tarifas actuales del mercado eléctrico español.
+            <strong>${t('comp-in-5-years')} ${Math.round(ahorro5anos)}€</strong>. 
+            ${t('comp-real-numbers')}.
         </p>
         ${drkPricesHTML}
         ${competitorPricesHTML}
