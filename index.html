@@ -22224,7 +22224,17 @@ const panelTranslations = {
         'comp-text-pocket': 'que permanecen en tu bolsillo cada año',
         'comp-text-in-5-years': 'En 5 años, el ahorro acumulado sería de',
         'comp-text-these-numbers': 'Estos números son reales y están calculados con las tarifas actuales del mercado eléctrico español',
-        'comp-text-competitor-prices': 'Precios de la Competencia'
+        'comp-text-competitor-prices': 'Precios de la Competencia',
+        'comp-text-drk-indexed': 'DRK INDEXADO',
+        'comp-text-drk-fixed': 'DRK FIJO',
+        'comp-text-best-market': 'MEJOR OPCIÓN DEL MERCADO',
+        'comp-text-stable-price': 'Precio estable garantizado',
+        'comp-text-power': 'POTENCIA',
+        'comp-text-energy': 'ENERGÍA',
+        'comp-text-peak': 'Punta',
+        'comp-text-standard': 'Llano',
+        'comp-text-valley': 'Valle',
+        'comp-text-detailed-prices': 'Precios Detallados DRK Energía'
     },
     en: {
         'panel-title': 'DRK Energy',
@@ -22284,7 +22294,17 @@ const panelTranslations = {
         'comp-text-pocket': 'that stays in your pocket each year',
         'comp-text-in-5-years': 'In 5 years, the accumulated savings would be',
         'comp-text-these-numbers': 'These numbers are real and calculated with current Spanish electricity market rates',
-        'comp-text-competitor-prices': 'Competitor Prices'
+        'comp-text-competitor-prices': 'Competitor Prices',
+        'comp-text-drk-indexed': 'DRK INDEXED',
+        'comp-text-drk-fixed': 'DRK FIXED',
+        'comp-text-best-market': 'BEST MARKET OPTION',
+        'comp-text-stable-price': 'Guaranteed stable price',
+        'comp-text-power': 'POWER',
+        'comp-text-energy': 'ENERGY',
+        'comp-text-peak': 'Peak',
+        'comp-text-standard': 'Standard',
+        'comp-text-valley': 'Off-peak',
+        'comp-text-detailed-prices': 'DRK Energy Detailed Prices'
     },
     pt: {
         'panel-title': 'DRK Energia',
@@ -22344,7 +22364,17 @@ const panelTranslations = {
         'comp-text-pocket': 'que permanece no seu bolso a cada ano',
         'comp-text-in-5-years': 'Em 5 anos, a economia acumulada seria de',
         'comp-text-these-numbers': 'Estes números são reais e calculados com as tarifas atuais do mercado elétrico espanhol',
-        'comp-text-competitor-prices': 'Preços da Concorrência'
+        'comp-text-competitor-prices': 'Preços da Concorrência',
+        'comp-text-drk-indexed': 'DRK INDEXADO',
+        'comp-text-drk-fixed': 'DRK FIXO',
+        'comp-text-best-market': 'MELHOR OPÇÃO DO MERCADO',
+        'comp-text-stable-price': 'Preço estável garantido',
+        'comp-text-power': 'POTÊNCIA',
+        'comp-text-energy': 'ENERGIA',
+        'comp-text-peak': 'Pico',
+        'comp-text-standard': 'Normal',
+        'comp-text-valley': 'Vale',
+        'comp-text-detailed-prices': 'Preços Detalhados DRK Energia'
     },
     zh: {
         'panel-title': 'DRK 能源',
@@ -22404,7 +22434,17 @@ const panelTranslations = {
         'comp-text-pocket': '每年留在您的口袋里',
         'comp-text-in-5-years': '5年内，累计节省将达到',
         'comp-text-these-numbers': '这些数字是真实的，使用西班牙电力市场的当前费率计算',
-        'comp-text-competitor-prices': '竞争对手价格'
+        'comp-text-competitor-prices': '竞争对手价格',
+        'comp-text-drk-indexed': 'DRK浮动',
+        'comp-text-drk-fixed': 'DRK固定',
+        'comp-text-best-market': '市场最佳选择',
+        'comp-text-stable-price': '保证稳定价格',
+        'comp-text-power': '功率',
+        'comp-text-energy': '能源',
+        'comp-text-peak': '高峰',
+        'comp-text-standard': '标准',
+        'comp-text-valley': '低谷',
+        'comp-text-detailed-prices': 'DRK能源详细价格'
     },
     fr: {
         'panel-title': 'DRK Énergie',
@@ -22464,7 +22504,17 @@ const panelTranslations = {
         'comp-text-pocket': 'qui reste dans votre poche chaque année',
         'comp-text-in-5-years': 'En 5 ans, l\'économie cumulée serait de',
         'comp-text-these-numbers': 'Ces chiffres sont réels et calculés avec les tarifs actuels du marché électrique espagnol',
-        'comp-text-competitor-prices': 'Prix de la Concurrence'
+        'comp-text-competitor-prices': 'Prix de la Concurrence',
+        'comp-text-drk-indexed': 'DRK INDEXÉ',
+        'comp-text-drk-fixed': 'DRK FIXE',
+        'comp-text-best-market': 'MEILLEURE OPTION DU MARCHÉ',
+        'comp-text-stable-price': 'Prix stable garanti',
+        'comp-text-power': 'PUISSANCE',
+        'comp-text-energy': 'ÉNERGIE',
+        'comp-text-peak': 'Pointe',
+        'comp-text-standard': 'Normal',
+        'comp-text-valley': 'Creuse',
+        'comp-text-detailed-prices': 'Prix Détaillés DRK Énergie'
     }
 };
 
@@ -23065,16 +23115,29 @@ function translateComparisonTexts() {
     // Reemplazar textos específicos (en orden, de más específico a más general)
     // Solo reemplazamos los textos exactos en español, sin tocar números ni nombres
     const replacements = {
+        // Textos más largos primero para evitar reemplazos parciales
         'un cliente tipo paga solo': t('comp-text-client-pays'),
         'mientras que con': t('comp-text-while'),
         'que permanecen en tu bolsillo cada año': t('comp-text-pocket'),
         'En 5 años, el ahorro acumulado sería de': t('comp-text-in-5-years'),
         'Estos números son reales y están calculados con las tarifas actuales del mercado eléctrico español': t('comp-text-these-numbers'),
+        'Precios Detallados DRK Energía': t('comp-text-detailed-prices'),
         'Precios de la Competencia': t('comp-text-competitor-prices'),
+        'MEJOR OPCIÓN DEL MERCADO': t('comp-text-best-market'),
+        'Precio estable garantizado': t('comp-text-stable-price'),
+        'DRK INDEXADO': t('comp-text-drk-indexed'),
+        'DRK FIJO': t('comp-text-drk-fixed'),
         'de diferencia': t('comp-text-difference'),
         'al año': t('comp-text-per-year'),
         'pagaría': t('comp-text-would-pay'),
         'Eso son': t('comp-text-thats'),
+        'POTENCIA': t('comp-text-power'),
+        'ENERGÍA': t('comp-text-energy'),
+        'Potencia': t('comp-text-power'),
+        'Energía': t('comp-text-energy'),
+        'Punta': t('comp-text-peak'),
+        'Llano': t('comp-text-standard'),
+        'Valle': t('comp-text-valley'),
         'Con ': t('comp-text-with') + ' ' // Con espacio para no reemplazar "Con" dentro de otras palabras
     };
     
