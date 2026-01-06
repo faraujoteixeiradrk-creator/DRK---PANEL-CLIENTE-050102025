@@ -22567,14 +22567,17 @@ function generateComparison() {
     const todosResultados = tarifas.map(tarifa => {
         try {
             const resultado = calculateTariffCost(tarifa, clienteTipo, '2.0TD');
+            const nombreComercializadora = (tarifa.comercializadora || tarifa.name || 'Sin nombre').trim();
+            
             return {
-                comercializadora: tarifa.comercializadora || tarifa.name || 'Sin nombre',
+                comercializadora: nombreComercializadora,
                 costeMensual: resultado.totalPeriod,
                 costeAnual: resultado.totalAnnual,
                 resultado: resultado,
-                esDRK: (tarifa.comercializadora || tarifa.name || '').toUpperCase().includes('DRK'),
-                esIndexado: (tarifa.comercializadora || tarifa.name || '').toUpperCase().includes('INDEX'),
-                esFijo: (tarifa.comercializadora || tarifa.name || '').toUpperCase().includes('FIJ')
+                tarifa: tarifa, // Guardar tarifa completa para precios detallados
+                esDRK: nombreComercializadora.toUpperCase().includes('DRK'),
+                esIndexado: nombreComercializadora.toUpperCase().includes('INDEX'),
+                esFijo: nombreComercializadora.toUpperCase().includes('FIJ')
             };
         } catch (err) {
             console.error('Error calculando tarifa:', tarifa, err);
@@ -22585,30 +22588,55 @@ function generateComparison() {
     // Ordenar de más barata a más cara
     todosResultados.sort((a, b) => a.costeAnual - b.costeAnual);
     
-    // FILTRAR SOLO 6 COMERCIALIZADORAS - Discriminar a favor de DRK
+    console.log('📊 Total resultados:', todosResultados.length);
+    
+    // ESTRATEGIA: Seleccionar 6-8 comercializadoras DIFERENTES
     let resultados = [];
+    let comercializadorasUsadas = new Set();
     
-    // 1. Buscar todas las tarifas DRK
-    const tarifasDRK = todosResultados.filter(r => r.esDRK);
+    // 1. Buscar la mejor tarifa DRK (indexado o fijo)
+    const mejorDRK = todosResultados.find(r => r.esDRK);
+    if (mejorDRK) {
+        resultados.push(mejorDRK);
+        comercializadorasUsadas.add('DRK');
+        console.log('✅ Incluida mejor DRK:', mejorDRK.comercializadora);
+    }
     
-    // 2. Obtener las NO-DRK
-    const tarifasNoDRK = todosResultados.filter(r => !r.esDRK);
-    
-    // 3. Estrategia: Incluir todas las DRK + las 5 más baratas de NO-DRK
-    // Esto asegura que DRK siempre aparezca y se compare con las mejores del mercado
-    
-    if (tarifasDRK.length > 0) {
-        // Incluir todas las DRK (normalmente serán 2: indexado y fijo)
-        resultados = [...tarifasDRK];
+    // 2. Añadir las otras comercializadoras (NO-DRK), asegurando diversidad
+    for (const resultado of todosResultados) {
+        if (resultados.length >= 6) break; // Máximo 6 comercializadoras
         
-        // Añadir las mejores NO-DRK hasta completar 6
-        const espaciosRestantes = 6 - tarifasDRK.length;
-        if (espaciosRestantes > 0 && tarifasNoDRK.length > 0) {
-            resultados.push(...tarifasNoDRK.slice(0, espaciosRestantes));
+        // Extraer nombre base de comercializadora (sin "INDEX", "FIJO", etc.)
+        let nombreBase = resultado.comercializadora.toUpperCase()
+            .replace(/INDEX(ADO)?/gi, '')
+            .replace(/FIJ[OA]/gi, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+        
+        // Si es DRK, normalizar
+        if (nombreBase.includes('DRK')) {
+            nombreBase = 'DRK';
         }
-    } else {
-        // Si no hay DRK (caso raro), solo mostrar las 6 mejores
-        resultados = todosResultados.slice(0, 6);
+        
+        // Solo añadir si no tenemos ya esta comercializadora
+        if (!comercializadorasUsadas.has(nombreBase)) {
+            resultados.push(resultado);
+            comercializadorasUsadas.add(nombreBase);
+            console.log('✅ Incluida:', resultado.comercializadora, '(base:', nombreBase + ')');
+        }
+    }
+    
+    // Si tenemos menos de 6, añadir más aunque se repitan (pero con nombres diferentes)
+    if (resultados.length < 6) {
+        for (const resultado of todosResultados) {
+            if (resultados.length >= 6) break;
+            
+            // Verificar que no esté ya en resultados (comparar objeto exacto)
+            if (!resultados.some(r => r.comercializadora === resultado.comercializadora)) {
+                resultados.push(resultado);
+                console.log('✅ Incluida adicional:', resultado.comercializadora);
+            }
+        }
     }
     
     // Reordenar de más barata a más cara
@@ -22624,7 +22652,7 @@ function generateComparison() {
         return sum + (r.costeAnual - mejorPrecio);
     }, 0) / (resultados.length - 1);
     
-    // Buscar tarifas DRK específicas para el resumen
+    // Buscar tarifas DRK específicas para el resumen (de TODOS los resultados, no solo los 6)
     const drkIndexado = todosResultados.find(r => r.esDRK && r.esIndexado);
     const drkFijo = todosResultados.find(r => r.esDRK && r.esFijo);
     
@@ -22640,7 +22668,7 @@ function generateComparison() {
     // Renderizar gráfico
     renderComparisonChart(resultados, mejorPrecio, peorPrecio);
     
-    // Renderizar highlight con precios DRK
+    // Renderizar highlight con precios DRK detallados
     renderComparisonHighlight(resultados[0], resultados[resultados.length - 1], mejorPrecio, peorPrecio, drkIndexado, drkFijo);
 }
 
@@ -22759,28 +22787,88 @@ function renderComparisonHighlight(mejor, peor, mejorPrecio, peorPrecio, drkInde
     
     let drkPricesHTML = '';
     
-    // Mostrar precios DRK si están disponibles
+    // Mostrar precios DRK DETALLADOS si están disponibles
     if (drkIndexado || drkFijo) {
-        drkPricesHTML = '<div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid #059669;">';
-        drkPricesHTML += '<h4 style="font-size: 1.125rem; font-weight: 700; color: #047857; margin-bottom: 1rem;">📊 Precios DRK Energía</h4>';
-        drkPricesHTML += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">';
+        drkPricesHTML = '<div style="margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #059669;">';
+        drkPricesHTML += '<h4 style="font-size: 1.25rem; font-weight: 700; color: #047857; margin-bottom: 1.5rem;">💰 Precios Detallados DRK Energía</h4>';
+        
+        // Crear grid para las dos tarifas DRK
+        drkPricesHTML += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">';
         
         if (drkIndexado) {
+            const tarifa = drkIndexado.tarifa;
             drkPricesHTML += `
-                <div style="background: rgba(16, 185, 129, 0.1); padding: 1rem; border-radius: 0.75rem; border: 2px solid #10b981;">
-                    <div style="font-size: 0.75rem; font-weight: 600; color: #047857; text-transform: uppercase; margin-bottom: 0.25rem;">DRK Indexado</div>
-                    <div style="font-size: 1.5rem; font-weight: 900; color: #047857;">${Math.round(drkIndexado.costeAnual)}€<span style="font-size: 0.875rem; font-weight: 600;">/año</span></div>
-                    <div style="font-size: 0.75rem; color: #059669; margin-top: 0.25rem;">${drkIndexado.costeMensual.toFixed(2)}€/mes</div>
+                <div style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); padding: 1.5rem; border-radius: 1rem; border: 2px solid #10b981;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <div style="font-size: 1rem; font-weight: 700; color: #047857;">DRK INDEXADO</div>
+                        <div style="font-size: 1.5rem; font-weight: 900; color: #047857;">${Math.round(drkIndexado.costeAnual)}€/año</div>
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <div style="font-size: 0.75rem; font-weight: 600; color: #059669; text-transform: uppercase; margin-bottom: 0.5rem;">⚡ Potencia</div>
+                        <div style="display: grid; gap: 0.25rem;">
+                            <div style="font-size: 0.875rem; color: #065f46;">
+                                P1: <strong>${(tarifa.p_potencia_1 || 0).toFixed(4)} €/kW·año</strong>
+                            </div>
+                            <div style="font-size: 0.875rem; color: #065f46;">
+                                P2: <strong>${(tarifa.p_potencia_2 || 0).toFixed(4)} €/kW·año</strong>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div style="font-size: 0.75rem; font-weight: 600; color: #059669; text-transform: uppercase; margin-bottom: 0.5rem;">⚡ Energía</div>
+                        <div style="display: grid; gap: 0.25rem;">
+                            <div style="font-size: 0.875rem; color: #065f46;">
+                                Punta: <strong>${(tarifa.p1_price || 0).toFixed(4)} €/kWh</strong>
+                            </div>
+                            <div style="font-size: 0.875rem; color: #065f46;">
+                                Llano: <strong>${(tarifa.p2_price || 0).toFixed(4)} €/kWh</strong>
+                            </div>
+                            <div style="font-size: 0.875rem; color: #065f46;">
+                                Valle: <strong>${(tarifa.p3_price || 0).toFixed(4)} €/kWh</strong>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             `;
         }
         
         if (drkFijo) {
+            const tarifa = drkFijo.tarifa;
             drkPricesHTML += `
-                <div style="background: rgba(16, 185, 129, 0.1); padding: 1rem; border-radius: 0.75rem; border: 2px solid #10b981;">
-                    <div style="font-size: 0.75rem; font-weight: 600; color: #047857; text-transform: uppercase; margin-bottom: 0.25rem;">DRK Fijo</div>
-                    <div style="font-size: 1.5rem; font-weight: 900; color: #047857;">${Math.round(drkFijo.costeAnual)}€<span style="font-size: 0.875rem; font-weight: 600;">/año</span></div>
-                    <div style="font-size: 0.75rem; color: #059669; margin-top: 0.25rem;">${drkFijo.costeMensual.toFixed(2)}€/mes</div>
+                <div style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); padding: 1.5rem; border-radius: 1rem; border: 2px solid #10b981;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <div style="font-size: 1rem; font-weight: 700; color: #047857;">DRK FIJO</div>
+                        <div style="font-size: 1.5rem; font-weight: 900; color: #047857;">${Math.round(drkFijo.costeAnual)}€/año</div>
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <div style="font-size: 0.75rem; font-weight: 600; color: #059669; text-transform: uppercase; margin-bottom: 0.5rem;">⚡ Potencia</div>
+                        <div style="display: grid; gap: 0.25rem;">
+                            <div style="font-size: 0.875rem; color: #065f46;">
+                                P1: <strong>${(tarifa.p_potencia_1 || 0).toFixed(4)} €/kW·año</strong>
+                            </div>
+                            <div style="font-size: 0.875rem; color: #065f46;">
+                                P2: <strong>${(tarifa.p_potencia_2 || 0).toFixed(4)} €/kW·año</strong>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div style="font-size: 0.75rem; font-weight: 600; color: #059669; text-transform: uppercase; margin-bottom: 0.5rem;">⚡ Energía</div>
+                        <div style="display: grid; gap: 0.25rem;">
+                            <div style="font-size: 0.875rem; color: #065f46;">
+                                Punta: <strong>${(tarifa.p1_price || 0).toFixed(4)} €/kWh</strong>
+                            </div>
+                            <div style="font-size: 0.875rem; color: #065f46;">
+                                Llano: <strong>${(tarifa.p2_price || 0).toFixed(4)} €/kWh</strong>
+                            </div>
+                            <div style="font-size: 0.875rem; color: #065f46;">
+                                Valle: <strong>${(tarifa.p3_price || 0).toFixed(4)} €/kWh</strong>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             `;
         }
