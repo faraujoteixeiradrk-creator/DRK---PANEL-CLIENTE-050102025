@@ -22488,6 +22488,7 @@ function translatePanel() {
 function changePanelLanguage(lang) {
     currentPanelLanguage = lang;
     translatePanel();
+    translateComparisonTexts(); // Traducir textos de la comparativa
     
     // Guardar idioma para cuando entre a la calculadora
     localStorage.setItem('selectedLanguage', lang);
@@ -22502,6 +22503,7 @@ document.addEventListener('DOMContentLoaded', function() {
     currentPanelLanguage = savedLang;
     document.getElementById('panel-language-selector').value = savedLang;
     translatePanel();
+    translateComparisonTexts(); // Traducir textos de comparativa si hay
 });
 
 // ========== NAVEGACIÓN ENTRE PANEL Y CALCULADORA ==========
@@ -23038,16 +23040,26 @@ function renderComparisonChart(resultados, mejorPrecio, peorPrecio) {
 
 // NUEVA FUNCIÓN: Traduce textos DESPUÉS de generar el HTML (no toca la generación de precios)
 function translateComparisonTexts() {
-    if (currentLanguage === 'es') return; // Si es español, no hay nada que traducir
-    
     const highlightContainer = document.getElementById('comparison-highlight');
     if (!highlightContainer) return;
     
+    // Obtener idioma actual - usar currentPanelLanguage
+    const lang = currentPanelLanguage || 'es';
+    
+    console.log('🌍 translateComparisonTexts ejecutándose, idioma:', lang);
+    
+    if (lang === 'es') {
+        console.log('   ✅ Idioma es español, no se requiere traducción');
+        return; // Si es español, no hay nada que traducir
+    }
+    
     let html = highlightContainer.innerHTML;
+    const originalLength = html.length;
     
     // Helper para obtener traducción
     const t = (key) => {
-        return panelTranslations[currentLanguage][key] || panelTranslations.es[key] || key;
+        const translation = panelTranslations[lang] && panelTranslations[lang][key];
+        return translation || panelTranslations.es[key] || key;
     };
     
     // Reemplazar textos específicos (en orden, de más específico a más general)
@@ -23066,15 +23078,24 @@ function translateComparisonTexts() {
         'Con ': t('comp-text-with') + ' ' // Con espacio para no reemplazar "Con" dentro de otras palabras
     };
     
+    let replacementCount = 0;
+    
     // Aplicar todos los reemplazos
     for (const [spanish, translation] of Object.entries(replacements)) {
-        if (spanish !== translation) { // Solo reemplazar si la traducción es diferente
+        if (spanish !== translation && html.includes(spanish)) {
+            const beforeReplace = html;
             html = html.split(spanish).join(translation);
+            if (beforeReplace !== html) {
+                replacementCount++;
+                console.log(`   ✅ Reemplazado: "${spanish}" → "${translation}"`);
+            }
         }
     }
     
     highlightContainer.innerHTML = html;
+    console.log(`   📊 Total reemplazos: ${replacementCount}, HTML length: ${originalLength} → ${html.length}`);
 }
+
 
 function renderComparisonHighlight(mejor, peor, mejorPrecio, peorPrecio, drkIndexado, drkFijo, todosResultados) {
     const highlightContainer = document.getElementById('comparison-highlight');
