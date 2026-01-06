@@ -3123,13 +3123,17 @@
                 ieRate: IE_RATE
             };
             
-            // Si el ahorro es negativo, forzar la tarifa actual como mejor
+            // NOTA: Para la comparativa, NO forzamos la tarifa actual aunque el ahorro sea negativo
+            // Necesitamos los valores REALES de cada comercializadora
+            // Esta lógica solo aplica en el calculador normal
+            /*
             if (result.savings <= 0) {
                 result.isNegativeSavings = true;
                 result.savings = 0;
                 result.totalAnnual = result.originalBillAnnual;  
                 result.offer = { name: "Tu Tarifa Actual", description: "Es la mejor opción detectada", isDrk: false };
             }
+            */
             
             return result;
         }
