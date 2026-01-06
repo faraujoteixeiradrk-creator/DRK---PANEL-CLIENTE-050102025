@@ -514,8 +514,8 @@
                 <span id="app-logo-main">DRK</span> <span class="text-drk-500" id="app-logo-accent">Energía</span>
             </h1>
             
-            <!-- Language Selector -->
-            <div class="flex items-center gap-3">
+            <!-- Language Selector (oculto - idioma se selecciona en panel principal) -->
+            <div id="calculator-language-selector" class="flex items-center gap-3" style="display: none;">
                 <div class="relative">
                     <select id="language-selector" onchange="if(window.LANG) window.LANG.change(this.value)" 
                             class="bg-gradient-to-r from-drk-700 to-drk-800 text-white text-base px-5 py-3 rounded-lg border-2 border-drk-500 cursor-pointer hover:from-drk-600 hover:to-drk-700 transition-all appearance-none pr-10 font-bold shadow-lg">
@@ -21957,7 +21957,8 @@ function changePanelLanguage(lang) {
     // Guardar idioma para cuando entre a la calculadora
     localStorage.setItem('selectedLanguage', lang);
     
-    console.log('✅ Idioma del panel cambiado a:', lang);
+    console.log('🌍 Idioma del panel cambiado a:', lang);
+    console.log('✅ El idioma se aplicará automáticamente en la calculadora');
 }
 
 // Cargar idioma guardado al inicio
@@ -21973,20 +21974,39 @@ function showCalculator() {
     document.body.classList.add('showing-calculator');
     window.scrollTo(0, 0);
     
-    // Sincronizar idioma con la calculadora
+    // Ocultar el selector de idiomas de la calculadora (ya se eligió en el panel)
+    const calcLangSelector = document.getElementById('calculator-language-selector');
+    if (calcLangSelector) {
+        calcLangSelector.style.display = 'none';
+    }
+    
+    // FORZAR el cambio de idioma cada vez que se muestra la calculadora
     setTimeout(() => {
         const savedLang = localStorage.getItem('selectedLanguage') || 'es';
-        if (window.LANG && typeof window.LANG.change === 'function') {
-            window.LANG.change(savedLang, true);
-            console.log('✅ Idioma sincronizado con calculadora:', savedLang);
-        }
         
-        // También actualizar el selector de idiomas de la calculadora
+        console.log('🔄 Aplicando idioma:', savedLang);
+        
+        // Actualizar el selector oculto primero
         const calcSelector = document.getElementById('language-selector');
         if (calcSelector) {
             calcSelector.value = savedLang;
         }
-    }, 100);
+        
+        // FORZAR cambio de idioma en la calculadora (sin skipReload)
+        if (window.LANG && typeof window.LANG.change === 'function') {
+            window.LANG.change(savedLang, false); // false = NO skip reload, fuerza cambio
+            console.log('✅ Idioma FORZADO en calculadora:', savedLang);
+        }
+        
+        // Doble verificación: volver a traducir después de un momento
+        setTimeout(() => {
+            if (window.LANG && typeof window.LANG.retranslate === 'function') {
+                window.LANG.retranslate();
+                console.log('✅ Traducción refrescada');
+            }
+        }, 200);
+        
+    }, 150);
 }
 
 function showPanel() {
