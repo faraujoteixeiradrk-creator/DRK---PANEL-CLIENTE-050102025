@@ -22308,14 +22308,12 @@ function sendEmail() {
     let body = texts.greeting + '\n\n';
     body += texts.intro + '\n\n';
     
-    // Agregar datos del cliente si se rellenaron
-    if (clientName || clientEmail || clientPhone) {
-        body += texts.contactDataHeader + '\n';
-        if (clientName) body += '• ' + texts.name + ': ' + clientName + '\n';
-        if (clientEmail) body += '• ' + texts.email + ': ' + clientEmail + '\n';
-        if (clientPhone) body += '• ' + texts.phone + ': ' + clientPhone + '\n';
-        body += '\n';
-    }
+    // SIEMPRE agregar sección de datos del cliente
+    body += texts.contactDataHeader + '\n';
+    body += '• ' + texts.name + ': ' + (clientName || '_____________________') + '\n';
+    body += '• ' + texts.email + ': ' + (clientEmail || '_____________________') + '\n';
+    body += '• ' + texts.phone + ': ' + (clientPhone || '_____________________') + '\n';
+    body += '\n';
     
     body += texts.closing + '\n\n';
     body += texts.farewell;
