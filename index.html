@@ -13432,9 +13432,29 @@ Destinatarios: F.araujo@drk.es, rguerra@drk.es, l.grande@drk.es
             if (currentTypeCheck !== '2.0TD') {
                 return window.showErrorModal("El escáner QR solo es compatible con la tarifa 2.0 TD.");
             }
+            
+            // Si las tarifas no están cargadas, cargarlas silenciosamente y esperar
             if (currentTariffs['2.0TD'].length === 0) {
-                 return window.showErrorModal("Cargando tarifas para esta modalidad. Por favor, espere.");
+                console.log('⏳ Cargando tarifas 2.0TD...');
+                
+                // Cargar tarifas en segundo plano
+                if (typeof fetchTariffsFromSheet === 'function') {
+                    fetchTariffsFromSheet('2.0TD').then(() => {
+                        console.log('✅ Tarifas cargadas, iniciando escáner...');
+                        // Reintentar abrir el escáner después de cargar
+                        setTimeout(() => {
+                            if (document.getElementById('start-scan-btn')) {
+                                document.getElementById('start-scan-btn').click();
+                            }
+                        }, 500);
+                    }).catch(err => {
+                        console.error('❌ Error cargando tarifas:', err);
+                        window.showErrorModal("Error al cargar las tarifas. Por favor, intenta de nuevo.");
+                    });
+                }
+                return; // Salir sin mostrar modal molesto
             }
+            
             if (scannerRunning) return;
             
             // FEEDBACK INMEDIATO: Mostrar que está cargando
@@ -22188,6 +22208,18 @@ function showCalculator() {
         if (window.LANG && typeof window.LANG.change === 'function') {
             window.LANG.change(savedLang, false); // false = NO skip reload, fuerza cambio
             console.log('✅ Idioma FORZADO en calculadora:', savedLang);
+        }
+        
+        // Precargar tarifas automáticamente en segundo plano
+        if (typeof fetchTariffsFromSheet === 'function' && typeof currentTariffs !== 'undefined') {
+            if (currentTariffs['2.0TD'] && currentTariffs['2.0TD'].length === 0) {
+                console.log('📊 Precargando tarifas 2.0TD en segundo plano...');
+                fetchTariffsFromSheet('2.0TD').then(() => {
+                    console.log('✅ Tarifas 2.0TD precargadas exitosamente');
+                }).catch(err => {
+                    console.error('⚠️ Error precargando tarifas:', err);
+                });
+            }
         }
         
         // Doble verificación: volver a traducir después de un momento
