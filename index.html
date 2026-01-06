@@ -22570,10 +22570,11 @@ function generateComparison() {
             const nombreComercializadora = (tarifa.comercializadora || tarifa.name || 'Sin nombre').trim();
             const descNormalizado = (tarifa.description || '').toUpperCase().trim();
             
+            // Crear objeto con valores explícitos para evitar referencias
             return {
                 comercializadora: nombreComercializadora,
-                costeMensual: resultado.totalPeriod,
-                costeAnual: resultado.totalAnnual,
+                costeMensual: Number(resultado.totalPeriod),
+                costeAnual: Number(resultado.totalAnnual),
                 resultado: resultado,
                 tarifa: tarifa,
                 nombreOriginal: nombreComercializadora,
@@ -22588,6 +22589,12 @@ function generateComparison() {
     }).filter(r => r !== null);
     
     console.log(`✅ ${todosResultados.length} tarifas calculadas correctamente`);
+    
+    // DEBUG: Mostrar algunos ejemplos
+    console.log('DEBUG - Primeras 5 tarifas calculadas:');
+    todosResultados.slice(0, 5).forEach(r => {
+        console.log(`  ${r.comercializadora}: Mensual=${r.costeMensual.toFixed(2)}€, Anual=${r.costeAnual.toFixed(2)}€`);
+    });
     
     // PASO 1: Buscar TODAS las DRK INDEX y seleccionar LA MÁS BARATA
     const todasDRKIndex = todosResultados.filter(r => {
@@ -22629,8 +22636,35 @@ function generateComparison() {
     
     // PASO 3: Añadir las 2 DRK y ORDENARLAS POR PRECIO REAL
     let drkTarifas = [];
-    if (mejorDRKIndex) drkTarifas.push(mejorDRKIndex);
-    if (mejorDRKFijo) drkTarifas.push(mejorDRKFijo);
+    
+    // Crear COPIAS PROFUNDAS de las DRK para evitar referencias compartidas
+    if (mejorDRKIndex) {
+        drkTarifas.push({
+            comercializadora: mejorDRKIndex.comercializadora,
+            costeMensual: Number(mejorDRKIndex.costeMensual),
+            costeAnual: Number(mejorDRKIndex.costeAnual),
+            resultado: mejorDRKIndex.resultado,
+            tarifa: mejorDRKIndex.tarifa,
+            nombreOriginal: mejorDRKIndex.nombreOriginal,
+            descripcion: mejorDRKIndex.descripcion,
+            nombreNormalizado: mejorDRKIndex.nombreNormalizado,
+            descripcionNormalizada: mejorDRKIndex.descripcionNormalizada
+        });
+    }
+    
+    if (mejorDRKFijo) {
+        drkTarifas.push({
+            comercializadora: mejorDRKFijo.comercializadora,
+            costeMensual: Number(mejorDRKFijo.costeMensual),
+            costeAnual: Number(mejorDRKFijo.costeAnual),
+            resultado: mejorDRKFijo.resultado,
+            tarifa: mejorDRKFijo.tarifa,
+            nombreOriginal: mejorDRKFijo.nombreOriginal,
+            descripcion: mejorDRKFijo.descripcion,
+            nombreNormalizado: mejorDRKFijo.nombreNormalizado,
+            descripcionNormalizada: mejorDRKFijo.descripcionNormalizada
+        });
+    }
     
     // IMPORTANTE: Ordenar por precio real (la más barata primero)
     drkTarifas.sort((a, b) => a.costeAnual - b.costeAnual);
@@ -22665,10 +22699,23 @@ function generateComparison() {
         if (tarifasComercial.length > 0) {
             // Ordenar por coste y tomar SOLO la más barata
             tarifasComercial.sort((a, b) => a.costeAnual - b.costeAnual);
-            const mejorTarifa = tarifasComercial[0];
+            const mejorTarifaOriginal = tarifasComercial[0];
             
-            // IMPORTANTE: Forzar el nombre de la comercializadora para que sea claro
-            mejorTarifa.nombreComercializadoraForzado = comercialObj.nombre;
+            // CRÍTICO: Crear una COPIA PROFUNDA del objeto para evitar referencias compartidas
+            const mejorTarifa = {
+                comercializadora: mejorTarifaOriginal.comercializadora,
+                costeMensual: Number(mejorTarifaOriginal.costeMensual),
+                costeAnual: Number(mejorTarifaOriginal.costeAnual),
+                resultado: mejorTarifaOriginal.resultado,
+                tarifa: mejorTarifaOriginal.tarifa,
+                nombreOriginal: mejorTarifaOriginal.nombreOriginal,
+                descripcion: mejorTarifaOriginal.descripcion,
+                nombreNormalizado: mejorTarifaOriginal.nombreNormalizado,
+                descripcionNormalizada: mejorTarifaOriginal.descripcionNormalizada,
+                nombreComercializadoraForzado: comercialObj.nombre // Forzar nombre claro
+            };
+            
+            console.log(`DEBUG - ${comercialObj.nombre} COPIA CREADA: Anual=${mejorTarifa.costeAnual.toFixed(2)}€, Mensual=${mejorTarifa.costeMensual.toFixed(2)}€`);
             
             otrasComercializadoras.push(mejorTarifa);
             console.log(`✅ ${comercialObj.nombre}: ${mejorTarifa.descripcion || mejorTarifa.comercializadora} - ${mejorTarifa.costeAnual.toFixed(2)}€/año (${mejorTarifa.costeMensual.toFixed(2)}€/mes)`);
@@ -22683,6 +22730,11 @@ function generateComparison() {
     // PASO 5: Combinar todo - DRK primero (las 2 ordenadas por precio), luego el resto
     let resultados = [...drkTarifas, ...otrasComercializadoras];
     
+    console.log('\n🔍 DEBUG DESPUÉS DE COMBINAR:');
+    resultados.forEach((r, i) => {
+        console.log(`  [${i}] ${r.descripcion || r.comercializadora}: Mensual=${r.costeMensual.toFixed(2)}€, Anual=${r.costeAnual.toFixed(2)}€`);
+    });
+    
     // Limitar a máximo 8
     if (resultados.length > 8) {
         resultados = resultados.slice(0, 8);
@@ -22690,7 +22742,12 @@ function generateComparison() {
     
     console.log('📊 RANKING FINAL (orden real por precio):');
     resultados.forEach((r, i) => {
-        console.log(`  ${i+1}º: ${r.descripcion || r.comercializadora} - ${r.costeAnual.toFixed(2)}€/año (${r.costeMensual.toFixed(2)}€/mes)`);
+        console.log(`  ${i+1}º: ${r.descripcion || r.comercializadora} - ANUAL=${r.costeAnual.toFixed(2)}€/año (MENSUAL=${r.costeMensual.toFixed(2)}€/mes)`);
+    });
+    
+    console.log('\n🔍 DEBUG DETALLADO - Verificando cada resultado:');
+    resultados.forEach((r, i) => {
+        console.log(`  [${i}] costeAnual=${r.costeAnual}, costeMensual=${r.costeMensual}, tipo=${typeof r.costeAnual}`);
     });
     
     // Mejor y peor precio del ranking
@@ -22758,6 +22815,8 @@ function renderComparisonTable(resultados, mejorPrecio) {
     document.getElementById('comparison-table-container').style.display = 'block';
     
     resultados.forEach((resultado, index) => {
+        console.log(`🔍 RENDERIZANDO FILA ${index}: ${resultado.comercializadora}, Mensual=${resultado.costeMensual}, Anual=${resultado.costeAnual}`);
+        
         // Destacar DRK INDEX (primera) y DRK FIJO (segunda)
         const isBest = index === 0;
         const isSecondBest = index === 1 && resultado.nombreNormalizado && resultado.nombreNormalizado.includes('DRK');
@@ -22993,11 +23052,16 @@ function renderComparisonHighlight(mejor, peor, mejorPrecio, peorPrecio, drkInde
         
         competitorPricesHTML += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">';
         
+        console.log('🏪 Generando precios de competencia...');
+        
         // Mostrar precios de comercializadoras (excluyendo las 2 primeras que son DRK)
+        // USAR todosResultados (array final filtrado y ordenado) en lugar de todos los resultados
         for (let i = 2; i < todosResultados.length && i < 8; i++) {
             const r = todosResultados[i];
             const tarifa = r.tarifa;
             const nombreComercial = r.nombreComercializadoraForzado || r.comercializadora;
+            
+            console.log(`  [${i}] ${nombreComercial}: Anual=${r.costeAnual.toFixed(2)}€`);
             
             competitorPricesHTML += `
                 <div style="background: #f8fafc; padding: 1.25rem; border-radius: 0.75rem; border: 1px solid #e2e8f0;">
