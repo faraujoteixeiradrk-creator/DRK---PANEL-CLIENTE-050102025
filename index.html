@@ -22700,46 +22700,94 @@ async function loadPlanAmigoData() {
     
     console.log('📥 Cargando datos del PLAN AMIGO...');
     
+    // Función para parsear CSV correctamente (maneja comillas y diferentes delimitadores)
+    function parseCSVLine(line, delimiter = ',') {
+        const result = [];
+        let current = '';
+        let inQuotes = false;
+        
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            const nextChar = line[i + 1];
+            
+            if (char === '"') {
+                if (inQuotes && nextChar === '"') {
+                    current += '"';
+                    i++;
+                } else {
+                    inQuotes = !inQuotes;
+                }
+            } else if (char === delimiter && !inQuotes) {
+                result.push(current.trim());
+                current = '';
+            } else {
+                current += char;
+            }
+        }
+        result.push(current.trim());
+        return result;
+    }
+    
+    // Función para convertir número europeo a JS
+    const parseEuropeanNumber = (str) => {
+        if (!str || str.trim() === '') return 0;
+        // Eliminar comillas si las hay
+        let cleaned = str.replace(/"/g, '').trim();
+        // Reemplazar coma por punto
+        cleaned = cleaned.replace(',', '.');
+        const num = parseFloat(cleaned);
+        return isNaN(num) ? 0 : num;
+    };
+    
     try {
         const response = await fetch(CSV_URL);
         const csvText = await response.text();
         
-        console.log('📄 CSV recibido:', csvText.substring(0, 200));
+        console.log('📄 CSV recibido (primeras 300 chars):', csvText.substring(0, 300));
         
-        // Detectar el separador (puede ser coma o punto y coma)
         const lines = csvText.split('\n');
-        const separator = lines[0].includes(';') ? ';' : ',';
-        console.log('🔍 Separador detectado:', separator);
         
-        // Función para convertir número europeo (coma decimal) a número JS
-        const parseEuropeanNumber = (str) => {
-            if (!str || str.trim() === '') return 0;
-            // Reemplazar coma por punto y eliminar espacios
-            const cleaned = str.trim().replace(',', '.');
-            const num = parseFloat(cleaned);
-            return isNaN(num) ? 0 : num;
-        };
+        // Detectar delimitador mirando la primera línea
+        const firstLine = lines[0];
+        const delimiter = firstLine.includes(';') ? ';' : ',';
+        console.log('🔍 Delimitador detectado:', delimiter === ';' ? 'punto y coma' : 'coma');
         
-        // Buscar la fila que contiene "DRK PLAN AMIGO"
+        // Parsear encabezados
+        const headers = parseCSVLine(lines[0], delimiter);
+        console.log('📋 Encabezados:', headers);
+        
+        // Buscar la fila con "DRK PLAN AMIGO"
         for (let i = 1; i < lines.length; i++) {
             const line = lines[i].trim();
             if (!line) continue;
             
-            const values = line.split(separator);
+            const values = parseCSVLine(line, delimiter);
             
-            // Columna B (índice 1) debe contener "DRK PLAN AMIGO"
+            // Buscar "DRK PLAN AMIGO" en la columna description (índice 1)
             if (values[1] && values[1].includes('DRK PLAN AMIGO')) {
-                console.log('✅ Fila encontrada:', values);
+                console.log('✅ Fila encontrada completa:', values);
                 
-                // Parsear valores con formato europeo
-                const p1Price = parseEuropeanNumber(values[2]);      // Columna C: p1_price
-                const p2Price = parseEuropeanNumber(values[3]);      // Columna D: p2_price
-                const p3Price = parseEuropeanNumber(values[4]);      // Columna E: p3_price
-                const pPotencia1 = parseEuropeanNumber(values[5]);   // Columna F: p_potencia_1
-                const pPotencia2 = parseEuropeanNumber(values[6]);   // Columna G: p_potencia_2
+                // Según tu imagen de Google Sheets:
+                // Columna A (0): name = "DRK"
+                // Columna B (1): description = "DRK PLAN AMIGO"
+                // Columna C (2): p1_price = "0,099"
+                // Columna D (3): p2_price = "0,099"
+                // Columna E (4): p3_price = "0,099"
+                // Columna F (5): p_potencia_1 = "36,135"
+                // Columna G (6): p_potencia_2 = "36,135"
                 
-                console.log('📊 Valores parseados:', {
-                    p1Price, p2Price, p3Price, pPotencia1, pPotencia2
+                const p1Price = parseEuropeanNumber(values[2]);
+                const p2Price = parseEuropeanNumber(values[3]);
+                const p3Price = parseEuropeanNumber(values[4]);
+                const pPotencia1 = parseEuropeanNumber(values[5]);
+                const pPotencia2 = parseEuropeanNumber(values[6]);
+                
+                console.log('📊 Valores parseados correctamente:', {
+                    'p1_price (Punta)': p1Price,
+                    'p2_price (Llano)': p2Price,
+                    'p3_price (Valle)': p3Price,
+                    'p_potencia_1 (P1)': pPotencia1,
+                    'p_potencia_2 (P2)': pPotencia2
                 });
                 
                 // Actualizar UI
@@ -22749,16 +22797,16 @@ async function loadPlanAmigoData() {
                 document.getElementById('plan-amigo-p-potencia-1').textContent = pPotencia1.toFixed(3);
                 document.getElementById('plan-amigo-p-potencia-2').textContent = pPotencia2.toFixed(3);
                 
-                console.log('✅ UI actualizada con datos del PLAN AMIGO');
+                console.log('✅ UI actualizada exitosamente');
                 return;
             }
         }
         
-        console.warn('⚠️ No se encontró DRK PLAN AMIGO en la hoja');
+        console.warn('⚠️ No se encontró "DRK PLAN AMIGO" en la columna description');
         
     } catch (error) {
         console.error('❌ Error cargando datos del PLAN AMIGO:', error);
-        // Valores por defecto en caso de error
+        // Valores correctos por defecto
         document.getElementById('plan-amigo-p1-price').textContent = '0.0990';
         document.getElementById('plan-amigo-p2-price').textContent = '0.0990';
         document.getElementById('plan-amigo-p3-price').textContent = '0.0990';
