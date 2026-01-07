@@ -22696,10 +22696,6 @@ function hideFriendsCode() {
 // Cargar datos del PLAN AMIGO desde Google Sheets
 async function loadPlanAmigoData() {
     const SHEET_ID = '1kLfQOZnTsBJ8lRXA0ab5RXk-QM3VeSRkDQsatL3-tVk';
-    const RANGE = 'Sheet1!A:H'; // Ajusta el rango según tu hoja
-    const API_KEY = 'AIzaSyC9nJ6n1JG0nQF9_fRhZ7hqmRbfRLl1234'; // Nota: Necesitarás tu API key
-    
-    // URL pública del CSV (alternativa más simple sin API key)
     const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
     
     console.log('📥 Cargando datos del PLAN AMIGO...');
@@ -22708,21 +22704,43 @@ async function loadPlanAmigoData() {
         const response = await fetch(CSV_URL);
         const csvText = await response.text();
         
-        // Parsear CSV simple
+        console.log('📄 CSV recibido:', csvText.substring(0, 200));
+        
+        // Detectar el separador (puede ser coma o punto y coma)
         const lines = csvText.split('\n');
-        const headers = lines[0].split(',');
-        const dataLine = lines[1].split(',');
+        const separator = lines[0].includes(';') ? ';' : ',';
+        console.log('🔍 Separador detectado:', separator);
+        
+        // Función para convertir número europeo (coma decimal) a número JS
+        const parseEuropeanNumber = (str) => {
+            if (!str || str.trim() === '') return 0;
+            // Reemplazar coma por punto y eliminar espacios
+            const cleaned = str.trim().replace(',', '.');
+            const num = parseFloat(cleaned);
+            return isNaN(num) ? 0 : num;
+        };
         
         // Buscar la fila que contiene "DRK PLAN AMIGO"
         for (let i = 1; i < lines.length; i++) {
-            const values = lines[i].split(',');
+            const line = lines[i].trim();
+            if (!line) continue;
+            
+            const values = line.split(separator);
+            
+            // Columna B (índice 1) debe contener "DRK PLAN AMIGO"
             if (values[1] && values[1].includes('DRK PLAN AMIGO')) {
-                // Encontramos la tarifa
-                const p1Price = parseFloat(values[2]);
-                const p2Price = parseFloat(values[3]);
-                const p3Price = parseFloat(values[4]);
-                const pPotencia1 = parseFloat(values[5]);
-                const pPotencia2 = parseFloat(values[6]);
+                console.log('✅ Fila encontrada:', values);
+                
+                // Parsear valores con formato europeo
+                const p1Price = parseEuropeanNumber(values[2]);      // Columna C: p1_price
+                const p2Price = parseEuropeanNumber(values[3]);      // Columna D: p2_price
+                const p3Price = parseEuropeanNumber(values[4]);      // Columna E: p3_price
+                const pPotencia1 = parseEuropeanNumber(values[5]);   // Columna F: p_potencia_1
+                const pPotencia2 = parseEuropeanNumber(values[6]);   // Columna G: p_potencia_2
+                
+                console.log('📊 Valores parseados:', {
+                    p1Price, p2Price, p3Price, pPotencia1, pPotencia2
+                });
                 
                 // Actualizar UI
                 document.getElementById('plan-amigo-p1-price').textContent = p1Price.toFixed(4);
@@ -22731,10 +22749,7 @@ async function loadPlanAmigoData() {
                 document.getElementById('plan-amigo-p-potencia-1').textContent = pPotencia1.toFixed(3);
                 document.getElementById('plan-amigo-p-potencia-2').textContent = pPotencia2.toFixed(3);
                 
-                console.log('✅ Datos del PLAN AMIGO cargados:', {
-                    p1Price, p2Price, p3Price, pPotencia1, pPotencia2
-                });
-                
+                console.log('✅ UI actualizada con datos del PLAN AMIGO');
                 return;
             }
         }
@@ -22744,9 +22759,9 @@ async function loadPlanAmigoData() {
     } catch (error) {
         console.error('❌ Error cargando datos del PLAN AMIGO:', error);
         // Valores por defecto en caso de error
-        document.getElementById('plan-amigo-p1-price').textContent = '0.099';
-        document.getElementById('plan-amigo-p2-price').textContent = '0.099';
-        document.getElementById('plan-amigo-p3-price').textContent = '0.099';
+        document.getElementById('plan-amigo-p1-price').textContent = '0.0990';
+        document.getElementById('plan-amigo-p2-price').textContent = '0.0990';
+        document.getElementById('plan-amigo-p3-price').textContent = '0.0990';
         document.getElementById('plan-amigo-p-potencia-1').textContent = '36.135';
         document.getElementById('plan-amigo-p-potencia-2').textContent = '36.135';
     }
