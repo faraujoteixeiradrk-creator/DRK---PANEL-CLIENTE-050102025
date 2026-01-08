@@ -782,6 +782,41 @@
                     </div>
                 </div>
 
+                <!-- Departamento 5: Noticias -->
+                <div class="dept-card" onclick="showNews()">
+                    <div class="icon-box">
+                        <!-- Icono: Periódico/Noticias -->
+                        <svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Periódico -->
+                            <rect x="12" y="15" width="36" height="30" rx="2" fill="#fbbf24" opacity="0.2"/>
+                            <rect x="12" y="15" width="36" height="30" rx="2" stroke="#fbbf24" stroke-width="2"/>
+                            
+                            <!-- Título principal -->
+                            <line x1="16" y1="21" x2="44" y2="21" stroke="#fbbf24" stroke-width="3" stroke-linecap="round"/>
+                            
+                            <!-- Líneas de texto -->
+                            <line x1="16" y1="27" x2="35" y2="27" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"/>
+                            <line x1="16" y1="31" x2="40" y2="31" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"/>
+                            <line x1="16" y1="35" x2="32" y2="35" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"/>
+                            
+                            <!-- Imagen/foto -->
+                            <rect x="16" y="38" width="12" height="5" rx="1" fill="#f59e0b" opacity="0.5"/>
+                            
+                            <!-- Más líneas -->
+                            <line x1="30" y1="39" x2="44" y2="39" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"/>
+                            <line x1="30" y1="42" x2="44" y2="42" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"/>
+                            
+                            <!-- Icono de "nuevo" -->
+                            <circle cx="46" cy="18" r="6" fill="#ef4444"/>
+                            <text x="46" y="21" text-anchor="middle" font-size="7" font-weight="bold" fill="#ffffff">N</text>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="dept-label" data-translate="dept5-label">Información</p>
+                        <h3 class="dept-title" data-translate="dept5-title">Noticias</h3>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
@@ -22179,6 +22214,11 @@ const panelTranslations = {
         'dept3-coming-soon': 'Próximamente: Email Backoffice',
         'dept4-label': 'Beneficios',
         'dept4-title': 'Código Amigos y Descuentos',
+        'dept5-label': 'Información',
+        'dept5-title': 'Noticias',
+        'news-title': 'Noticias',
+        'news-subtitle': 'Mantente informado con las últimas novedades',
+
         'dept4-coming-soon': 'Próximamente: Código Amigos',
         'friends-title': '👥 Código Amigos DRK',
         'friends-subtitle': 'Comparte energía, comparte ahorro',
@@ -22288,6 +22328,10 @@ const panelTranslations = {
         'dept3-coming-soon': 'Coming Soon: Backoffice Email',
         'dept4-label': 'Benefits',
         'dept4-title': 'Friends Code & Discounts',
+        'dept5-label': 'Information',
+        'dept5-title': 'News',
+        'news-title': 'News',
+        'news-subtitle': 'Stay informed with the latest updates',
         'dept4-coming-soon': 'Coming Soon: Friends Code',
         'friends-title': '👥 DRK Friends Code',
         'friends-subtitle': 'Share energy, share savings',
@@ -22396,6 +22440,10 @@ const panelTranslations = {
         'dept3-coming-soon': 'Em Breve: Email Backoffice',
         'dept4-label': 'Benefícios',
         'dept4-title': 'Código Amigos e Descontos',
+        'dept5-label': 'Informação',
+        'dept5-title': 'Notícias',
+        'news-title': 'Notícias',
+        'news-subtitle': 'Mantenha-se informado com as últimas novidades',
         'dept4-coming-soon': 'Em Breve: Código Amigos',
         'friends-title': '👥 Código Amigos DRK',
         'friends-subtitle': 'Compartilhe energia, compartilhe economia',
@@ -22504,6 +22552,10 @@ const panelTranslations = {
         'dept3-coming-soon': '即将推出：后台电子邮件',
         'dept4-label': '优惠',
         'dept4-title': '朋友代码和折扣',
+        'dept5-label': '信息',
+        'dept5-title': '新闻',
+        'news-title': '新闻',
+        'news-subtitle': '了解最新动态',
         'dept4-coming-soon': '即将推出：朋友代码',
         'friends-title': '👥 DRK朋友代码',
         'friends-subtitle': '分享能源，分享节省',
@@ -22612,6 +22664,10 @@ const panelTranslations = {
         'dept3-coming-soon': 'Prochainement: Email Backoffice',
         'dept4-label': 'Avantages',
         'dept4-title': 'Code Amis et Réductions',
+        'dept5-label': 'Information',
+        'dept5-title': 'Actualités',
+        'news-title': 'Actualités',
+        'news-subtitle': 'Restez informé avec les dernières nouvelles',
         'dept4-coming-soon': 'Prochainement: Code Amis',
         'friends-title': '👥 Code Amis DRK',
         'friends-subtitle': 'Partagez l\'énergie, partagez les économies',
@@ -22830,6 +22886,172 @@ function hideFriendsCode() {
     document.getElementById('friends-code-view').style.display = 'none';
     document.getElementById('panel-view').style.display = 'block';
     window.scrollTo(0, 0);
+}
+
+// ========== FUNCIONES DE NOTICIAS ==========
+async function showNews() {
+    document.getElementById('panel-view').style.display = 'none';
+    document.getElementById('news-view').style.display = 'block';
+    window.scrollTo(0, 0);
+    
+    // Traducir la pantalla
+    translatePanel();
+    
+    // Cargar noticias desde Google Sheets
+    await loadNews();
+}
+
+function hideNews() {
+    document.getElementById('news-view').style.display = 'none';
+    document.getElementById('panel-view').style.display = 'block';
+    window.scrollTo(0, 0);
+}
+
+async function loadNews() {
+    const SHEET_ID = '1kLfQOZnTsBJ8lRXA0ab5RXk-QM3VeSRkDQsatL3-tVk';
+    const GID = 632183598; // Hoja de noticias
+    const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${GID}`;
+    
+    console.log('📰 Cargando noticias desde Google Sheets...');
+    console.log(`📡 URL: ${CSV_URL}`);
+    
+    const newsContainer = document.getElementById('news-container');
+    const newsLoading = document.getElementById('news-loading');
+    const newsEmpty = document.getElementById('news-empty');
+    
+    // Mostrar loading
+    newsLoading.style.display = 'block';
+    newsContainer.style.display = 'none';
+    newsEmpty.style.display = 'none';
+    
+    // Función para parsear CSV
+    function parseCSVLine(line, delimiter = ',') {
+        const result = [];
+        let current = '';
+        let inQuotes = false;
+        
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            const nextChar = line[i + 1];
+            
+            if (char === '"') {
+                if (inQuotes && nextChar === '"') {
+                    current += '"';
+                    i++;
+                } else {
+                    inQuotes = !inQuotes;
+                }
+            } else if (char === delimiter && !inQuotes) {
+                result.push(current.trim());
+                current = '';
+            } else {
+                current += char;
+            }
+        }
+        result.push(current.trim());
+        return result;
+    }
+    
+    try {
+        const response = await fetch(CSV_URL);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const csvText = await response.text();
+        console.log('📄 CSV recibido (primeras 200 chars):', csvText.substring(0, 200));
+        
+        const lines = csvText.split('\n').filter(line => line.trim().length > 0);
+        console.log(`📊 Total de líneas: ${lines.length}`);
+        
+        if (lines.length < 1) {
+            console.warn('⚠️ No hay noticias en la hoja');
+            newsLoading.style.display = 'none';
+            newsEmpty.style.display = 'block';
+            return;
+        }
+        
+        // Detectar delimitador
+        const delimiter = lines[0].includes(';') ? ';' : ',';
+        console.log(`🔍 Delimitador detectado: ${delimiter === ';' ? 'punto y coma (;)' : 'coma (,)'}`);
+        
+        // Parsear todas las líneas
+        const allRows = lines.map(line => parseCSVLine(line, delimiter));
+        
+        // Buscar la columna A (índice 0)
+        const noticias = [];
+        let startRow = 0;
+        
+        // Detectar si la primera fila es encabezado
+        if (allRows[0][0] && (allRows[0][0].toLowerCase().includes('noticia') || allRows[0][0].toLowerCase().includes('titulo') || allRows[0][0].length < 20)) {
+            startRow = 1; // Saltar encabezado
+            console.log('📋 Primera fila detectada como encabezado, saltando...');
+        }
+        
+        // Extraer noticias de la columna A
+        for (let i = startRow; i < allRows.length; i++) {
+            const noticiaText = allRows[i][0] ? allRows[i][0].replace(/"/g, '').trim() : '';
+            
+            if (noticiaText && noticiaText.length > 10) {
+                noticias.push(noticiaText);
+                console.log(`✅ Noticia ${i + 1}: ${noticiaText.substring(0, 50)}...`);
+            }
+        }
+        
+        console.log(`🎯 Total de noticias encontradas: ${noticias.length}`);
+        
+        if (noticias.length === 0) {
+            newsLoading.style.display = 'none';
+            newsEmpty.style.display = 'block';
+            return;
+        }
+        
+        // Renderizar noticias
+        let noticiasHTML = '';
+        
+        noticias.forEach((noticia, index) => {
+            noticiasHTML += `
+                <div style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%); border: 2px solid rgba(37, 150, 190, 0.3); border-radius: 1rem; padding: 2rem; transition: all 0.3s; cursor: pointer;" onmouseover="this.style.borderColor='rgba(37, 150, 190, 0.8)'; this.style.transform='translateY(-4px)'; this.style.boxShadow='0 12px 40px rgba(37, 150, 190, 0.3)';" onmouseout="this.style.borderColor='rgba(37, 150, 190, 0.3)'; this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                    <div style="display: flex; align-items: start; gap: 1.5rem;">
+                        <!-- Número de noticia -->
+                        <div style="flex-shrink: 0; width: 50px; height: 50px; background: linear-gradient(135deg, #2596be 0%, #1e7a9e 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 800; color: white; box-shadow: 0 4px 12px rgba(37, 150, 190, 0.4);">
+                            ${index + 1}
+                        </div>
+                        
+                        <!-- Contenido de la noticia -->
+                        <div style="flex: 1;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                                <i class="fas fa-newspaper" style="color: #fbbf24; font-size: 1.25rem;"></i>
+                                <span style="color: #94a3b8; font-size: 0.875rem; font-weight: 600;">
+                                    ${new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                </span>
+                            </div>
+                            <p style="color: white; font-size: 1.1rem; line-height: 1.8; margin: 0;">
+                                ${noticia}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        newsContainer.innerHTML = noticiasHTML;
+        newsLoading.style.display = 'none';
+        newsContainer.style.display = 'grid';
+        
+        console.log('✅ Noticias cargadas y renderizadas correctamente');
+        
+    } catch (error) {
+        console.error('❌ Error cargando noticias:', error);
+        newsLoading.style.display = 'none';
+        newsEmpty.style.display = 'block';
+        newsEmpty.innerHTML = `
+            <i class="fas fa-exclamation-triangle" style="font-size: 4rem; color: #ef4444; margin-bottom: 1rem;"></i>
+            <p style="color: #94a3b8; font-size: 1.25rem;">Error al cargar las noticias</p>
+            <p style="color: #64748b; font-size: 0.875rem; margin-top: 0.5rem;">Por favor, verifica que la hoja de Google Sheets sea pública</p>
+        `;
+    }
 }
 
 // Cargar datos del PLAN AMIGO desde Google Sheets
@@ -24664,6 +24886,51 @@ ${myName}`;
     }, 1000);
 }
 </script>
+
+
+<!-- ========== VISTA DE NOTICIAS ========== -->
+<div id="news-view" style="display: none; min-height: 100vh; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 2rem;">
+    <div style="max-width: 1200px; margin: 0 auto;">
+        <!-- Botón Volver -->
+        <button onclick="hideNews()" style="background: rgba(37, 150, 190, 0.2); border: 2px solid #2596be; color: white; padding: 0.75rem 1.5rem; border-radius: 0.5rem; cursor: pointer; margin-bottom: 2rem; font-size: 1rem; transition: all 0.3s;">
+            <i class="fas fa-arrow-left" style="margin-right: 0.5rem;"></i><span data-translate="back-button">Volver al Panel</span>
+        </button>
+
+        <!-- Header -->
+        <div style="text-align: center; margin-bottom: 3rem;">
+            <h1 style="font-size: 3rem; font-weight: 800; color: white; margin-bottom: 1rem;">
+                <i class="fas fa-newspaper" style="color: #fbbf24; margin-right: 1rem;"></i>
+                <span data-translate="news-title">Noticias</span>
+            </h1>
+            <p style="font-size: 1.25rem; color: #94a3b8;" data-translate="news-subtitle">
+                Mantente informado con las últimas novedades
+            </p>
+        </div>
+
+        <!-- Loading indicator -->
+        <div id="news-loading" style="text-align: center; padding: 3rem; display: none;">
+            <div style="display: inline-block; width: 50px; height: 50px; border: 4px solid rgba(37, 150, 190, 0.3); border-top-color: #2596be; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            <p style="color: #94a3b8; margin-top: 1rem;">Cargando noticias...</p>
+        </div>
+
+        <!-- Container de noticias -->
+        <div id="news-container" style="display: grid; gap: 2rem;">
+            <!-- Las noticias se cargarán aquí dinámicamente -->
+        </div>
+
+        <!-- Mensaje si no hay noticias -->
+        <div id="news-empty" style="display: none; text-align: center; padding: 4rem;">
+            <i class="fas fa-inbox" style="font-size: 4rem; color: #475569; margin-bottom: 1rem;"></i>
+            <p style="color: #94a3b8; font-size: 1.25rem;">No hay noticias disponibles en este momento</p>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+</style>
 
 <!-- Modal Email Backoffice -->
 <div id="email-modal" class="email-modal">
