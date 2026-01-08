@@ -23091,38 +23091,31 @@ async function loadFriendsTexts() {
                     continue;
                 }
                 
-                // ACTUALIZAR EL DOM
-                let updates = 0;
+                // GUARDAR EN EL OBJETO DE TRADUCCIONES (español)
+                console.log('💾 Guardando textos en las traducciones de español...');
                 
-                // 1. Texto comercial en el banner azul
-                const bannerCodeElement = document.querySelector('[data-translate="friends-banner-code"]');
-                if (bannerCodeElement && textoComercial) {
-                    bannerCodeElement.textContent = textoComercial;
-                    console.log('✅ Texto comercial actualizado en la web');
-                    updates++;
-                } else {
-                    console.log('❌ No se encontró el elemento del banner');
-                }
-                
-                // 2. Párrafo de condiciones importantes
-                const conditionsIntroElement = document.querySelector('[data-translate="friends-conditions-intro"]');
-                if (conditionsIntroElement && condicionesIntro) {
-                    conditionsIntroElement.innerHTML = condicionesIntro;
-                    console.log('✅ Párrafo de condiciones actualizado');
-                    updates++;
-                } else {
-                    console.log('❌ No se encontró el elemento de condiciones intro');
-                }
-                
-                // 3. Los 5 bullet points de condiciones
-                for (let i = 0; i < Math.min(5, condicionesPuntos.length); i++) {
-                    const conditionElement = document.querySelector(`[data-translate="friends-condition-${i + 1}"]`);
-                    if (conditionElement && condicionesPuntos[i]) {
-                        conditionElement.textContent = condicionesPuntos[i];
-                        console.log(`✅ Condición ${i + 1} actualizada: "${condicionesPuntos[i].substring(0, 40)}..."`);
-                        updates++;
+                // Actualizar las traducciones de español con los textos de Google Sheets
+                if (typeof translations !== 'undefined' && translations['es']) {
+                    translations['es']['friends-banner-code'] = textoComercial;
+                    translations['es']['friends-conditions-intro'] = condicionesIntro;
+                    
+                    for (let i = 0; i < Math.min(5, condicionesPuntos.length); i++) {
+                        if (condicionesPuntos[i]) {
+                            translations['es'][`friends-condition-${i + 1}`] = condicionesPuntos[i];
+                        }
                     }
+                    
+                    console.log('✅ Traducciones de español actualizadas con datos de Google Sheets');
+                } else {
+                    console.warn('⚠️ Objeto de traducciones no disponible');
                 }
+                
+                // APLICAR TRADUCCIÓN SEGÚN EL IDIOMA ACTUAL
+                // Esto asegura que si el usuario está en otro idioma, se mantengan las traducciones
+                console.log('🌍 Aplicando traducciones según idioma actual...');
+                translatePanel();
+                
+                let updates = 7; // 1 banner + 1 intro + 5 condiciones
                 
                 if (updates > 0) {
                     console.log(`\n🎉 ¡ÉXITO! Se actualizaron ${updates} elementos con gid=${gid}`);
