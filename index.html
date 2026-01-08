@@ -22818,8 +22818,11 @@ async function showFriendsCode() {
     // Traducir la pantalla
     translatePanel();
     
-    // Cargar datos del PLAN AMIGO desde Google Sheets
+    // Cargar datos del PLAN AMIGO desde Google Sheets (Hoja 1)
     await loadPlanAmigoData();
+    
+    // Cargar textos dinámicos desde Google Sheets (Hoja 2)
+    await loadFriendsTexts();
 }
 
 function hideFriendsCode() {
@@ -22947,6 +22950,123 @@ async function loadPlanAmigoData() {
         document.getElementById('plan-amigo-p3-price').textContent = '0.0990';
         document.getElementById('plan-amigo-p-potencia-1').textContent = '36.135';
         document.getElementById('plan-amigo-p-potencia-2').textContent = '36.135';
+    }
+}
+
+// ========== CARGAR TEXTOS DINÁMICOS DESDE HOJA 2 ==========
+async function loadFriendsTexts() {
+    const SHEET_ID = '1kLfQOZnTsBJ8lRXA0ab5RXk-QM3VeSRkDQsatL3-tVk';
+    // gid=0 es la primera hoja, necesitamos la Hoja 2
+    // Si no sabes el gid, prueba con gid=1, gid=2, etc. o usa el nombre de la hoja
+    const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=1`;
+    
+    console.log('📥 Cargando textos dinámicos desde Hoja 2...');
+    
+    // Función para parsear CSV correctamente
+    function parseCSVLine(line, delimiter = ',') {
+        const result = [];
+        let current = '';
+        let inQuotes = false;
+        
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            const nextChar = line[i + 1];
+            
+            if (char === '"') {
+                if (inQuotes && nextChar === '"') {
+                    current += '"';
+                    i++;
+                } else {
+                    inQuotes = !inQuotes;
+                }
+            } else if (char === delimiter && !inQuotes) {
+                result.push(current.trim());
+                current = '';
+            } else {
+                current += char;
+            }
+        }
+        result.push(current.trim());
+        return result;
+    }
+    
+    try {
+        const response = await fetch(CSV_URL);
+        const csvText = await response.text();
+        
+        console.log('📄 CSV Hoja 2 recibido (primeras 200 chars):', csvText.substring(0, 200));
+        
+        const lines = csvText.split('\n');
+        
+        // Detectar delimitador
+        const delimiter = lines[0].includes(';') ? ';' : ',';
+        console.log('🔍 Delimitador detectado:', delimiter === ';' ? 'punto y coma' : 'coma');
+        
+        // La primera línea son encabezados, la segunda línea tiene los datos
+        if (lines.length < 2) {
+            console.warn('⚠️ No hay suficientes líneas en la Hoja 2');
+            return;
+        }
+        
+        const headers = parseCSVLine(lines[0], delimiter);
+        const dataLine = parseCSVLine(lines[1], delimiter);
+        
+        console.log('📋 Encabezados Hoja 2:', headers);
+        console.log('📊 Datos:', dataLine);
+        
+        // Columna A (índice 0): Texto_comercial
+        const textoComercial = dataLine[0] || '';
+        
+        // Columna B (índice 1): Condiciones-importantes (párrafo)
+        const condicionesIntro = dataLine[1] || '';
+        
+        // Columna C (índice 2): Condiciones-importantes_2 (5 puntos separados por ;)
+        const condicionesRaw = dataLine[2] || '';
+        const condicionesPuntos = condicionesRaw.split(';').map(c => c.trim()).filter(c => c.length > 0);
+        
+        console.log('✅ Textos parseados:', {
+            textoComercial,
+            condicionesIntro,
+            condicionesPuntos
+        });
+        
+        // Actualizar el DOM
+        // 1. Texto comercial en el banner azul
+        const bannerCodeElement = document.querySelector('[data-translate="friends-banner-code"]');
+        if (bannerCodeElement && textoComercial) {
+            bannerCodeElement.textContent = textoComercial;
+            console.log('✅ Texto comercial actualizado');
+        }
+        
+        // 2. Párrafo de condiciones importantes
+        const conditionsIntroElement = document.querySelector('[data-translate="friends-conditions-intro"]');
+        if (conditionsIntroElement && condicionesIntro) {
+            // Mantener el strong si existe en el HTML original
+            const strongMatch = condicionesIntro.match(/\*\*(.*?)\*\*/);
+            if (strongMatch) {
+                // Reemplazar **texto** por <strong>texto</strong>
+                const htmlText = condicionesIntro.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                conditionsIntroElement.innerHTML = htmlText;
+            } else {
+                conditionsIntroElement.innerHTML = condicionesIntro;
+            }
+            console.log('✅ Párrafo de condiciones actualizado');
+        }
+        
+        // 3. Los 5 bullet points de condiciones
+        for (let i = 0; i < Math.min(5, condicionesPuntos.length); i++) {
+            const conditionElement = document.querySelector(`[data-translate="friends-condition-${i + 1}"]`);
+            if (conditionElement && condicionesPuntos[i]) {
+                conditionElement.textContent = condicionesPuntos[i];
+                console.log(`✅ Condición ${i + 1} actualizada`);
+            }
+        }
+        
+        console.log('✅ Todos los textos dinámicos actualizados desde Google Sheets');
+        
+    } catch (error) {
+        console.error('❌ Error cargando textos desde Hoja 2:', error);
+        console.log('ℹ️ Los textos por defecto permanecerán');
     }
 }
 
