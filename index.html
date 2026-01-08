@@ -169,11 +169,13 @@
             clearLogs();
             log('🚀 Iniciando test de conexión...', 'info');
             log(`📡 Google Sheet ID: ${SHEET_ID}`, 'info');
+            log(`🎯 gid de tu Hoja 2: 514707142`, 'info');
             
             document.getElementById('status').className = 'status loading';
             document.getElementById('status').textContent = '⏳ Probando conexión...';
 
-            const gidsToTry = [0, 1, 2, 3];
+            // gid=514707142 es tu Hoja 2 (del URL que compartiste)
+            const gidsToTry = [514707142, 0, 1, 2, 3]; // Prueba primero el correcto
             
             for (const gid of gidsToTry) {
                 const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
