@@ -921,7 +921,7 @@
                         <span>OTRAS OPCIONES DE CAPTURA</span>
                     </button>
                     
-                    <button onclick="selectTariffType('2.0TD'); setTimeout(() => document.getElementById('manual-input-btn').click(), 300);" class="w-full bg-drk-50 hover:bg-drk-100 text-drk-800 font-bold py-3 px-6 rounded-xl shadow-sm transform transition active:scale-95 flex items-center justify-center gap-3 mt-2">
+                    <button onclick="selectTariffType('2.0TD'); setTimeout(() => document.getElementById('manual-input-btn').click(), 300);" class="w-full bg-drk-50 hover:bg-drk-100 text-drk-800 font-bold py-3 px-6 rounded-xl shadow-sm transform transition active:scale-95 flex items-center justify-center gap-3 mt-2" style="display: none;">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                         <span>DATOS A MANO</span>
                     </button>
@@ -1727,7 +1727,7 @@
                         <span>OTRAS OPCIONES DE CAPTURA</span>
                     </button>
                 </div>
-                <button id="manual-input-btn" class="w-full bg-drk-50 hover:bg-drk-100 text-drk-800 font-bold py-3 px-6 rounded-xl shadow-sm transform transition active:scale-95 flex items-center justify-center gap-3 mt-3">
+                <button id="manual-input-btn" class="w-full bg-drk-50 hover:bg-drk-100 text-drk-800 font-bold py-3 px-6 rounded-xl shadow-sm transform transition active:scale-95 flex items-center justify-center gap-3 mt-3" style="display: none;">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                     <span>DATOS A MANO</span>
                 </button>
@@ -2390,6 +2390,15 @@
             'MULTICUPS': { sheetId: 'MULTICUPS_MIXED_TARIF_SHEET_ID', periods: 6, powerPeriods: 6, label: 'MULTICUPS', isHighVoltage: false, requiresQR: true, isMulti: true, baseTariffType: '2.0TD' }
         };
 
+        // **NUEVO: Configuración específica para el CALCULADOR DE AHORRO**
+        // Este spreadsheet se usa SOLO para "Calcula tu ahorro" (QR Scanner + Manual)
+        // NO se usa para la comparativa de precios
+        const CALCULATOR_TARIFF_CONFIG = {
+            '2.0TD': { sheetId: '1kLfQOZnTsBJ8lRXA0ab5RXk-QM3VeSRkDQsatL3-tVk', gid: 0, periods: 3, powerPeriods: 2, label: '2.0 TD', isHighVoltage: false, requiresQR: true, isMulti: false },
+            '3.0TD': { sheetId: '1kLfQOZnTsBJ8lRXA0ab5RXk-QM3VeSRkDQsatL3-tVk', gid: 0, periods: 6, powerPeriods: 6, label: '3.0 TD', isHighVoltage: true, requiresQR: false, isMulti: false },
+            'MULTICUPS': { sheetId: 'MULTICUPS_MIXED_TARIF_SHEET_ID', gid: 0, periods: 6, powerPeriods: 6, label: 'MULTICUPS', isHighVoltage: false, requiresQR: true, isMulti: true, baseTariffType: '2.0TD' }
+        };
+
         const BRANDS = {
             DRK: {
                 NAME: 'DRK', ACCENT: 'drk-500', ACCENT_TEXT: 'Energía',
@@ -2461,7 +2470,7 @@
         // Variables Escáner
         let scannerRunning = false;
         let scanLoopCount = 0; // Contador de frames para procesamiento progresivo
-        let frameCount = 0; // Contador para ciclo híbrido de 3 modos
+        let frameCount = 0; // 🔥 Contador para ciclo híbrido de 3 modos (AUTO-PROCESAMIENTO)
         let stream = null, video = null, canvas = null, canvasCtx = null, animationFrameId = null;
         
         // Variables para detección Google Lens
@@ -13660,7 +13669,7 @@ Destinatarios: F.araujo@drk.es, rguerra@drk.es, l.grande@drk.es
             scannerRunning = true;
             
             // Iniciar cámara con mínimas opciones para máxima velocidad
-            // 🔥 CONFIGURACIÓN ÓPTIMA (del código que funciona)
+            // 🔥 CONFIGURACIÓN ÓPTIMA (nuevo motor QR)
             navigator.mediaDevices.getUserMedia({ 
                 video: { 
                     facingMode: "environment",
@@ -13674,7 +13683,7 @@ Destinatarios: F.araujo@drk.es, rguerra@drk.es, l.grande@drk.es
                 video = document.createElement('video');
                 video.autoplay = true; 
                 video.playsInline = true;
-                video.muted = true; // CRÍTICO para iOS
+                video.muted = true; // 🔥 CRÍTICO para iOS
                 video.srcObject = s;
                 
                 // Crear canvas con configuración optimizada
@@ -13710,20 +13719,20 @@ Destinatarios: F.araujo@drk.es, rguerra@drk.es, l.grande@drk.es
             
             canvasCtx.drawImage(video, 0, 0, canvas.width, canvas.height);
             
-            // 🔥🔥🔥 CICLO HÍBRIDO + AUTO-PROCESAMIENTO INMEDIATO (DEL CÓDIGO QUE FUNCIONA)
+            // 🔥🔥🔥 NUEVO MOTOR QR: CICLO HÍBRIDO + AUTO-PROCESAMIENTO INMEDIATO 🔥🔥🔥
             let code = null;
             frameCount++;
 
-            // Ciclo de 3 modos para detectar QRs de cualquier tamaño
+            // 🎯 Ciclo de 3 modos para detectar QRs de CUALQUIER tamaño y condición
             const mode = frameCount % 3;
             
             if (mode === 0) {
-                // MODO PANORÁMICO: Escanea toda la imagen (QRs grandes o lejanos)
+                // MODO 0: PANORÁMICO - Escanea toda la imagen (QRs grandes o lejanos)
                 const imageData = canvasCtx.getImageData(0, 0, canvas.width, canvas.height);
                 code = jsQR(imageData.data, imageData.width, imageData.height);
             } 
             else if (mode === 1) {
-                // MODO PAPEL: Zoom central 50% (QRs pequeños en papel)
+                // MODO 1: PAPEL - Zoom central 50% (QRs pequeños en papel)
                 const size = Math.min(canvas.width, canvas.height) * 0.5;
                 const sx = (canvas.width - size) / 2;
                 const sy = (canvas.height - size) / 2;
@@ -13731,7 +13740,7 @@ Destinatarios: F.araujo@drk.es, rguerra@drk.es, l.grande@drk.es
                 code = jsQR(imageData.data, imageData.width, imageData.height);
             }
             else {
-                // MODO PRECISIÓN: Zoom 75% + Inversión (QRs difíciles)
+                // MODO 2: PRECISIÓN - Zoom 75% + Inversión (QRs difíciles/dañados)
                 const size = Math.min(canvas.width, canvas.height) * 0.75;
                 const sx = (canvas.width - size) / 2;
                 const sy = (canvas.height - size) / 2;
@@ -13744,22 +13753,23 @@ Destinatarios: F.araujo@drk.es, rguerra@drk.es, l.grande@drk.es
             // Actualizar barra de progreso
             const powerBar = document.getElementById('scan-power-bar');
             const powerLabel = document.getElementById('scan-power-label');
-            const container = document.getElementById('interactive');
             
-            // 🔥 AUTO-PROCESAMIENTO INMEDIATO (como el código que funciona)
+            // 🔥 AUTO-PROCESAMIENTO INMEDIATO (sin esperar clicks del usuario)
             if (code) {
-                // QR DETECTADO → PROCESAR INMEDIATAMENTE
-                console.log('✅ QR DETECTADO - Procesando automáticamente...');
+                // ✅ QR DETECTADO → PROCESAR INMEDIATAMENTE
+                console.log('🎯 QR DETECTADO - Procesando automáticamente...');
+                console.log(`   Modo de detección: ${mode === 0 ? 'PANORÁMICO (100%)' : mode === 1 ? 'PAPEL (50% zoom)' : 'PRECISIÓN (75% zoom + inversión)'}`);
+                
                 if (powerLabel) powerLabel.textContent = '⚡ PROCESANDO...';
                 if (powerBar) {
                     powerBar.style.width = '100%';
                     powerBar.className = 'bg-gradient-to-r from-green-500 to-green-600 h-full transition-all duration-300';
                 }
                 
-                // Vibración (si está soportada)
+                // Vibración de éxito (si está soportada)
                 if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
                 
-                // PROCESAR INMEDIATAMENTE - SIN ESPERAS
+                // 🔥 PROCESAR INMEDIATAMENTE - SIN ESPERAS NI CLICKS
                 handleQRRead(code.data);
                 return; // Salir del loop
             } else {
@@ -14339,11 +14349,18 @@ Destinatarios: F.araujo@drk.es, rguerra@drk.es, l.grande@drk.es
             }
         }
         
-        async function fetchTariffsFromSheet(tariffType) {
-            const config = TARIFF_CONFIG[tariffType];
+        async function fetchTariffsFromSheet(tariffType, useCalculatorConfig = true) {
+            // Usar CALCULATOR_TARIFF_CONFIG para el calculador de ahorro
+            // Usar TARIFF_CONFIG para la comparativa de precios
+            const config = useCalculatorConfig ? CALCULATOR_TARIFF_CONFIG[tariffType] : TARIFF_CONFIG[tariffType];
             const sheetId = config.sheetId;
+            const gid = config.gid !== undefined ? config.gid : 0; // Usar gid si está definido
 
-            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=0&t=${Date.now()}`;
+            console.log(`📥 Cargando tarifas ${tariffType} desde:`, useCalculatorConfig ? 'CALCULADOR' : 'COMPARATIVA');
+            console.log(`   SheetID: ${sheetId}`);
+            console.log(`   GID: ${gid}`);
+
+            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${gid}&t=${Date.now()}`;
 
             try {
                 const response = await fetch(url);
@@ -14351,13 +14368,15 @@ Destinatarios: F.araujo@drk.es, rguerra@drk.es, l.grande@drk.es
                 const text = await response.text();
                 currentTariffs[tariffType] = parseCSV(text, tariffType);
                 
+                console.log(`✅ ${currentTariffs[tariffType].length} tarifas cargadas para ${tariffType}`);
+                
                 if (currentTariffType !== 'MULTICUPS' && tariffType === currentTariffType) {
                     const count = currentTariffs[currentTariffType].length;
                     document.getElementById('tariff-display-badge').textContent = count;
                 }
 
             } catch (e) {
-                console.error(`Error al cargar ${tariffType}:`, e);
+                console.error(`❌ Error al cargar ${tariffType}:`, e);
                 currentTariffs[tariffType] = [];  
                 if (currentTariffType !== 'MULTICUPS' && tariffType === currentTariffType) {
                     document.getElementById('tariff-display-badge').textContent = 'Error';
@@ -22182,9 +22201,9 @@ const panelTranslations = {
         'friends-benefit-4-desc': 'Comparte la tarifa especial en energía y potencia con familiares, amigos o conocidos que quieras ayudar',
         'friends-banner-title': '👍 Lo mejor de todo',
         'friends-banner-intro': 'Imagina poder ofrecer a tus seres queridos una tarifa energética tan increíble como esta:',
-        'friends-banner-code': 'El código que te enviamos con el descuento es aplicable en hasta 5 hogares diferentes. Es tu oportunidad dorada para que quienes más te importan ahorren de verdad y de forma significativa en su factura de la luz.',
+        'friends-banner-code': 'El código que te enviamos con el descuento es aplicable es para ti y hasta 5 hogares diferentes. Es tu oportunidad dorada para que quienes más te importan ahorren de verdad y de forma significativa en su factura de la luz.',
         'friends-conditions-title': '📌 Condiciones importantes',
-        'friends-conditions-intro': 'La empresa que presente su factura para el estudio energético no tiene ninguna obligación de contratar con nosotros. El análisis es completamente gratuito y sin compromiso. Es una forma de ayudar a tu contacto empresarial a conocer su situación energética actual mientras tú obtienes acceso a esta promoción extraordinaria.',
+        'friends-conditions-intro': 'El hogar o empresa que presente su factura para el estudio energético no tiene ninguna obligación de contratar con nosotros. El análisis es completamente gratuito y sin compromiso. Es una forma de ayudar a tu contacto empresarial a conocer su situación energética actual mientras tú obtienes acceso a esta promoción extraordinaria.',
         'friends-condition-1': 'Basta con presentar una factura de empresa con suministro activo',
         'friends-condition-2': 'El código es válido únicamente para hasta 5 hogares',
         'friends-condition-3': 'No válido para tarifas con exclusión social o familia numerosa',
@@ -22295,9 +22314,9 @@ const panelTranslations = {
         'friends-benefit-4-desc': 'Share the special energy and power rate with family, friends or acquaintances you want to help',
         'friends-banner-title': '👍 Best of all',
         'friends-banner-intro': 'Imagine being able to offer your loved ones an incredible energy rate like this:',
-        'friends-banner-code': 'The discount code we send you is applicable to up to 5 different homes. It\'s your golden opportunity for those who matter most to you to truly save significantly on their electricity bill.',
+        'friends-banner-code': 'The discount code we send you is applicable for you and up to 5 different homes. It\'s your golden opportunity for those who matter most to you to truly save significantly on their electricity bill.',
         'friends-conditions-title': '📌 Important conditions',
-        'friends-conditions-intro': 'The company that submits their bill for the energy study has no obligation to contract with us. The analysis is completely free and without commitment. It\'s a way to help your business contact understand their current energy situation while you gain access to this extraordinary promotion.',
+        'friends-conditions-intro': 'The home or business that submits their bill for the energy study has no obligation to contract with us. The analysis is completely free and without commitment. It\'s a way to help your business contact understand their current energy situation while you gain access to this extraordinary promotion.',
         'friends-condition-1': 'Just submit a business bill with active supply',
         'friends-condition-2': 'The code is valid only for up to 5 homes',
         'friends-condition-3': 'Not valid for rates with social exclusion or large families',
@@ -22407,9 +22426,9 @@ const panelTranslations = {
         'friends-benefit-4-desc': 'Compartilhe a tarifa especial de energia e potência com familiares, amigos ou conhecidos que queira ajudar',
         'friends-banner-title': '👍 O melhor de tudo',
         'friends-banner-intro': 'Imagine poder oferecer aos seus entes queridos uma tarifa energética tão incrível como esta:',
-        'friends-banner-code': 'O código de desconto que enviamos é aplicável a até 5 lares diferentes. É sua oportunidade dourada para que aqueles que mais importam economizem de verdade e de forma significativa na conta de luz.',
+        'friends-banner-code': 'O código de desconto que enviamos é aplicável para você e até 5 lares diferentes. É sua oportunidade dourada para que aqueles que mais importam economizem de verdade e de forma significativa na conta de luz.',
         'friends-conditions-title': '📌 Condições importantes',
-        'friends-conditions-intro': 'A empresa que apresentar sua conta para o estudo energético não tem nenhuma obrigação de contratar conosco. A análise é completamente gratuita e sem compromisso. É uma forma de ajudar seu contato empresarial a conhecer sua situação energética atual enquanto você obtém acesso a esta promoção extraordinária.',
+        'friends-conditions-intro': 'O lar ou empresa que apresentar sua conta para o estudo energético não tem nenhuma obrigação de contratar conosco. A análise é completamente gratuita e sem compromisso. É uma forma de ajudar seu contato empresarial a conhecer sua situação energética atual enquanto você obtém acesso a esta promoção extraordinária.',
         'friends-condition-1': 'Basta apresentar uma conta de empresa com fornecimento ativo',
         'friends-condition-2': 'O código é válido apenas para até 5 lares',
         'friends-condition-3': 'Não válido para tarifas com exclusão social ou família numerosa',
@@ -22519,9 +22538,9 @@ const panelTranslations = {
         'friends-benefit-4-desc': '与您想帮助的家人、朋友或熟人分享特殊的能源和电力费率',
         'friends-banner-title': '👍 最棒的是',
         'friends-banner-intro': '想象一下能够为您所爱的人提供如此令人难以置信的能源费率：',
-        'friends-banner-code': '我们发送给您的折扣代码适用于最多5个不同的家庭。这是您的黄金机会，让最重要的人真正显著节省电费。',
+        'friends-banner-code': '我们发送给您的折扣代码适用于您和最多5个不同的家庭。这是您的黄金机会，让最重要的人真正显著节省电费。',
         'friends-conditions-title': '📌 重要条件',
-        'friends-conditions-intro': '提交账单进行能源研究的公司没有义务与我们签约。分析完全免费且无需承诺。这是帮助您的企业联系人了解其当前能源状况的一种方式，同时您可以获得这一非凡促销的机会。',
+        'friends-conditions-intro': '提交账单进行能源研究的家庭或企业没有义务与我们签约。分析完全免费且无需承诺。这是帮助您的企业联系人了解其当前能源状况的一种方式，同时您可以获得这一非凡促销的机会。',
         'friends-condition-1': '只需提交有活跃供应的企业账单',
         'friends-condition-2': '代码仅适用于最多5个家庭',
         'friends-condition-3': '不适用于社会排斥或大家庭费率',
@@ -22631,9 +22650,9 @@ const panelTranslations = {
         'friends-benefit-4-desc': 'Partagez le tarif spécial en énergie et puissance avec la famille, les amis ou les connaissances que vous voulez aider',
         'friends-banner-title': '👍 Le meilleur de tout',
         'friends-banner-intro': 'Imaginez pouvoir offrir à vos proches un tarif énergétique aussi incroyable que celui-ci:',
-        'friends-banner-code': 'Le code de réduction que nous vous envoyons est applicable jusqu\'à 5 foyers différents. C\'est votre opportunité en or pour que ceux qui comptent le plus pour vous économisent vraiment et significativement sur leur facture d\'électricité.',
+        'friends-banner-code': 'Le code de réduction que nous vous envoyons est applicable pour vous et jusqu\'à 5 foyers différents. C\'est votre opportunité en or pour que ceux qui comptent le plus pour vous économisent vraiment et significativement sur leur facture d\'électricité.',
         'friends-conditions-title': '📌 Conditions importantes',
-        'friends-conditions-intro': 'L\'entreprise qui présente sa facture pour l\'étude énergétique n\'a aucune obligation de contracter avec nous. L\'analyse est entièrement gratuite et sans engagement. C\'est une façon d\'aider votre contact professionnel à connaître sa situation énergétique actuelle pendant que vous accédez à cette promotion extraordinaire.',
+        'friends-conditions-intro': 'Le foyer ou l\'entreprise qui présente sa facture pour l\'étude énergétique n\'a aucune obligation de contracter avec nous. L\'analyse est entièrement gratuite et sans engagement. C\'est une façon d\'aider votre contact professionnel à connaître sa situation énergétique actuelle pendant que vous accédez à cette promotion extraordinaire.',
         'friends-condition-1': 'Il suffit de présenter une facture d\'entreprise avec fourniture active',
         'friends-condition-2': 'Le code est valable uniquement pour jusqu\'à 5 foyers',
         'friends-condition-3': 'Non valable pour les tarifs avec exclusion sociale ou famille nombreuse',
@@ -22822,14 +22841,17 @@ async function showFriendsCode() {
     document.getElementById('friends-code-view').style.display = 'block';
     window.scrollTo(0, 0);
     
-    // Traducir la pantalla
-    translatePanel();
+    // 🔥 ORDEN CORRECTO: Cargar datos y NO llamar a translatePanel (para evitar sobrescribir)
     
-    // Cargar datos del PLAN AMIGO desde Google Sheets (Hoja 1)
+    // 1. Cargar datos del PLAN AMIGO desde Google Sheets (Hoja 1)
     await loadPlanAmigoData();
     
-    // Cargar textos dinámicos desde Google Sheets (Hoja 2)
+    // 2. Cargar textos dinámicos desde Google Sheets (Hoja 2)
+    // Esta función YA actualiza el HTML directamente, no necesitamos translatePanel
     await loadFriendsTexts();
+    
+    // 3. NO llamar a translatePanel() aquí porque sobrescribiría los textos del Excel
+    // Los textos ya están actualizados por loadFriendsTexts()
 }
 
 function hideFriendsCode() {
@@ -23086,19 +23108,22 @@ async function loadPlanAmigoData() {
                 // Columna E (4): p3_price = "0,099"
                 // Columna F (5): p_potencia_1 = "36,135"
                 // Columna G (6): p_potencia_2 = "36,135"
+                // Columna H (7): descuento = "10" (porcentaje)
                 
                 const p1Price = parseEuropeanNumber(values[2]);
                 const p2Price = parseEuropeanNumber(values[3]);
                 const p3Price = parseEuropeanNumber(values[4]);
                 const pPotencia1 = parseEuropeanNumber(values[5]);
                 const pPotencia2 = parseEuropeanNumber(values[6]);
+                const descuento = parseEuropeanNumber(values[7]); // 🔥 NUEVO: Leer descuento de columna H
                 
                 console.log('📊 Valores parseados correctamente:', {
                     'p1_price (Punta)': p1Price,
                     'p2_price (Llano)': p2Price,
                     'p3_price (Valle)': p3Price,
                     'p_potencia_1 (P1)': pPotencia1,
-                    'p_potencia_2 (P2)': pPotencia2
+                    'p_potencia_2 (P2)': pPotencia2,
+                    'descuento': descuento + '%' // 🔥 NUEVO
                 });
                 
                 // Actualizar UI
@@ -23107,8 +23132,9 @@ async function loadPlanAmigoData() {
                 document.getElementById('plan-amigo-p3-price').textContent = p3Price.toFixed(4);
                 document.getElementById('plan-amigo-p-potencia-1').textContent = pPotencia1.toFixed(3);
                 document.getElementById('plan-amigo-p-potencia-2').textContent = pPotencia2.toFixed(3);
+                document.getElementById('plan-amigo-discount').textContent = Math.round(descuento); // 🔥 NUEVO: Actualizar descuento
                 
-                console.log('✅ UI actualizada exitosamente');
+                console.log('✅ UI actualizada exitosamente (incluyendo descuento)');
                 return;
             }
         }
@@ -23123,196 +23149,274 @@ async function loadPlanAmigoData() {
         document.getElementById('plan-amigo-p3-price').textContent = '0.0990';
         document.getElementById('plan-amigo-p-potencia-1').textContent = '36.135';
         document.getElementById('plan-amigo-p-potencia-2').textContent = '36.135';
+        document.getElementById('plan-amigo-discount').textContent = '10'; // 🔥 NUEVO: Valor por defecto
     }
 }
 
 // ========== CARGAR TEXTOS DINÁMICOS DESDE HOJA 2 ==========
 async function loadFriendsTexts() {
     const SHEET_ID = '1kLfQOZnTsBJ8lRXA0ab5RXk-QM3VeSRkDQsatL3-tVk';
+    const GID = 514707142;
     
-    console.log('📥 Cargando textos dinámicos desde Hoja 2...');
-    console.log('💡 IMPORTANTE: Abre la consola (F12) para ver los logs detallados');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('📥 CARGANDO TEXTOS "CÓDIGO AMIGOS Y DESCUENTOS"');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log(`📊 Spreadsheet: ${SHEET_ID}`);
+    console.log(`📑 GID: ${GID}`);
+    console.log(`🔄 Método: Google Sheets API (JSON)`);
     
-    // Función para parsear CSV correctamente
-    function parseCSVLine(line, delimiter = ',') {
-        const result = [];
-        let current = '';
-        let inQuotes = false;
+    // 🔥 USAR API DE GOOGLE SHEETS (gviz/tq) - Maneja mejor saltos de línea
+    const API_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${GID}`;
+    
+    try {
+        console.log(`\n🌐 Descargando desde Google Sheets API: ${API_URL}`);
+        const response = await fetch(API_URL);
         
-        for (let i = 0; i < line.length; i++) {
-            const char = line[i];
-            const nextChar = line[i + 1];
-            
-            if (char === '"') {
-                if (inQuotes && nextChar === '"') {
-                    current += '"';
-                    i++;
-                } else {
-                    inQuotes = !inQuotes;
-                }
-            } else if (char === delimiter && !inQuotes) {
-                result.push(current.trim());
-                current = '';
-            } else {
-                current += char;
+        console.log(`📬 Respuesta: ${response.status} ${response.statusText}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        let jsonText = await response.text();
+        console.log(`✅ Respuesta recibida (${jsonText.length} caracteres)`);
+        
+        // Google devuelve: google.visualization.Query.setResponse({...})
+        // Necesitamos extraer el JSON
+        const jsonMatch = jsonText.match(/google\.visualization\.Query\.setResponse\((.*)\);?$/);
+        if (!jsonMatch) {
+            throw new Error('Formato de respuesta inválido');
+        }
+        
+        const data = JSON.parse(jsonMatch[1]);
+        console.log(`📊 Datos parseados correctamente`);
+        
+        if (!data.table || !data.table.rows || data.table.rows.length < 2) {
+            throw new Error(`No hay suficientes filas (encontradas: ${data.table.rows.length})`);
+        }
+        
+        const rows = data.table.rows;
+        console.log(`📊 Total de filas: ${rows.length}`);
+        
+        // Función auxiliar para obtener valor de celda
+        function getCellValue(row, colIndex) {
+            if (!row.c || !row.c[colIndex]) return '';
+            const cell = row.c[colIndex];
+            return cell.v || cell.f || '';
+        }
+        
+        // Buscar fila de encabezados (fila 1)
+        let headerRowIndex = -1;
+        for (let i = 0; i < rows.length; i++) {
+            const firstCell = getCellValue(rows[i], 0).toString().toUpperCase();
+            if (firstCell.includes('TITULO') || firstCell.includes('TÍTULO')) {
+                headerRowIndex = i;
+                console.log(`\n✅ Encabezados encontrados en fila ${i + 1}`);
+                break;
             }
         }
-        result.push(current.trim());
-        return result;
-    }
-    
-    // Probar múltiples gids (0, 1, 2, 3) para encontrar la Hoja 2
-    // gid=514707142 es tu Hoja 2 (obtenido de la URL)
-    const gidsToTry = [514707142, 0, 1, 2, 3]; // Prueba primero el correcto, luego los demás por si acaso
-    
-    for (const gid of gidsToTry) {
-        const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
         
-        console.log(`\n🔍 Probando gid=${gid}...`);
-        console.log(`📡 URL: ${CSV_URL}`);
+        // Si no hay encabezados, asumir fila 1 = encabezados
+        if (headerRowIndex < 0 && rows.length >= 2) {
+            headerRowIndex = 0;
+            console.log(`⚠️ No se detectaron encabezados, asumiendo fila 1`);
+        }
         
-        try {
-            const response = await fetch(CSV_URL);
-            
-            if (!response.ok) {
-                console.log(`❌ gid=${gid} falló: ${response.status} ${response.statusText}`);
-                continue;
+        // La fila de datos es la siguiente
+        const dataRowIndex = headerRowIndex + 1;
+        if (dataRowIndex >= rows.length) {
+            throw new Error('No hay fila de datos después de los encabezados');
+        }
+        
+        console.log(`✅ Usando fila de datos: ${dataRowIndex + 1}`);
+        
+        const dataRow = rows[dataRowIndex];
+        
+        // Extraer valores de cada columna
+        const titulo = getCellValue(dataRow, 0).toString();
+        const bannerTexto = getCellValue(dataRow, 1).toString();
+        const codigoTexto = getCellValue(dataRow, 2).toString();
+        const condicionesIntro = getCellValue(dataRow, 3).toString();
+        const condicionesPuntos = getCellValue(dataRow, 4).toString();
+        const discountTextTop = getCellValue(dataRow, 5).toString(); // 🔥 NUEVO: Columna F
+        const discountTextBottom = getCellValue(dataRow, 6).toString(); // 🔥 NUEVO: Columna G
+        
+        console.log('\n🎯 TEXTOS EXTRAÍDOS:');
+        console.log('══════════════════════════════════════════════════');
+        console.log(`📌 A - TÍTULO (${titulo.length} chars):`);
+        console.log(`   "${titulo}"`);
+        console.log(`\n📌 B - BANNER (${bannerTexto.length} chars):`);
+        console.log(`   "${bannerTexto.substring(0, 100)}${bannerTexto.length > 100 ? '...' : ''}"`);
+        console.log(`\n📌 C - CÓDIGO (${codigoTexto.length} chars):`);
+        console.log(`   "${codigoTexto.substring(0, 100)}${codigoTexto.length > 100 ? '...' : ''}"`);
+        console.log(`\n📌 D - CONDICIONES INTRO (${condicionesIntro.length} chars):`);
+        console.log(`   "${condicionesIntro.substring(0, 100)}${condicionesIntro.length > 100 ? '...' : ''}"`);
+        console.log(`\n📌 E - CONDICIONES PUNTOS (${condicionesPuntos.length} chars):`);
+        console.log(`   "${condicionesPuntos.substring(0, 100)}${condicionesPuntos.length > 100 ? '...' : ''}"`);
+        console.log(`\n📌 F - TEXTO DESCUENTO ARRIBA (${discountTextTop.length} chars):`) // 🔥 NUEVO
+        console.log(`   "${discountTextTop}"`);
+        console.log(`\n📌 G - TEXTO DESCUENTO ABAJO (${discountTextBottom.length} chars):`) // 🔥 NUEVO
+        console.log(`   "${discountTextBottom}"`);
+        
+        // 🔥 SEPARAR BANNER CORRECTAMENTE (evitar duplicados)
+        const bannerLines = bannerTexto.split('\n').filter(l => l.trim());
+        
+        let bannerTitulo, bannerIntro;
+        
+        if (bannerLines.length >= 2) {
+            bannerTitulo = bannerLines[0];
+            bannerIntro = bannerLines.slice(1).join(' ').trim();
+        } else if (bannerLines.length === 1) {
+            bannerTitulo = bannerLines[0];
+            bannerIntro = '';
+        } else {
+            bannerTitulo = '👍 Lo mejor de todo';
+            bannerIntro = 'Imagina poder ofrecer a tus seres queridos una tarifa energética tan increíble como esta:';
+        }
+        
+        console.log('📝 Banner procesado:');
+        console.log(`   Título: "${bannerTitulo}"`);
+        console.log(`   Intro: "${bannerIntro ? bannerIntro.substring(0, 80) + '...' : '(vacío)'}"`);
+        console.log(`   Código texto: "${codigoTexto.substring(0, 80)}${codigoTexto.length > 80 ? '...' : ''}"`);
+        
+        // Parsear puntos de condiciones
+        const puntosArray = condicionesPuntos
+            .split(/[;\n]/)
+            .map(p => p.trim())
+            .filter(p => p.length > 5);
+        
+        console.log(`\n📋 ${puntosArray.length} puntos encontrados:`);
+        puntosArray.forEach((punto, idx) => {
+            console.log(`   ${idx + 1}. ${punto.substring(0, 60)}${punto.length > 60 ? '...' : ''}`);
+        });
+        
+        // ACTUALIZAR HTML DIRECTAMENTE
+        console.log('\n🔄 Actualizando HTML...');
+        let updateCount = 0;
+        
+        // 1. TÍTULO
+        const tituloElements = document.querySelectorAll('[data-translate="friends-title"]');
+        console.log(`   Título: ${tituloElements.length} elementos`);
+        tituloElements.forEach(el => {
+            el.innerHTML = `👥 ${titulo}`;
+            updateCount++;
+        });
+        
+        // 2. BANNER TÍTULO
+        const bannerTitleEl = document.querySelector('[data-translate="friends-banner-title"]');
+        if (bannerTitleEl) {
+            bannerTitleEl.textContent = bannerTitulo;
+            updateCount++;
+            console.log('   ✅ Banner título');
+        } else {
+            console.log('   ⚠️ Banner título NO encontrado');
+        }
+        
+        // 3. BANNER INTRO
+        const bannerIntroEl = document.querySelector('[data-translate="friends-banner-intro"]');
+        if (bannerIntroEl) {
+            bannerIntroEl.textContent = bannerIntro;
+            updateCount++;
+            console.log('   ✅ Banner intro');
+        } else {
+            console.log('   ⚠️ Banner intro NO encontrado');
+        }
+        
+        // 4. TEXTO DEL CÓDIGO
+        const codigoEl = document.querySelector('[data-translate="friends-banner-code"]');
+        if (codigoEl) {
+            codigoEl.innerHTML = codigoTexto;
+            updateCount++;
+            console.log('   ✅ Texto del código');
+        } else {
+            console.log('   ⚠️ Texto del código NO encontrado');
+        }
+        
+        // 5. CONDICIONES INTRO
+        const condIntroEl = document.querySelector('[data-translate="friends-conditions-intro"]');
+        if (condIntroEl) {
+            condIntroEl.innerHTML = condicionesIntro;
+            updateCount++;
+            console.log('   ✅ Condiciones intro');
+        } else {
+            console.log('   ⚠️ Condiciones intro NO encontrado');
+        }
+        
+        // 6. PUNTOS DE CONDICIONES (hasta 5)
+        let puntosUpdated = 0;
+        for (let i = 0; i < Math.min(5, puntosArray.length); i++) {
+            const puntoEl = document.querySelector(`[data-translate="friends-condition-${i + 1}"]`);
+            if (puntoEl && puntosArray[i]) {
+                puntoEl.textContent = puntosArray[i];
+                puntosUpdated++;
+                updateCount++;
             }
+        }
+        console.log(`   ✅ ${puntosUpdated} puntos de condiciones`);
+        
+        // 7. TEXTO DESCUENTO ARRIBA (Columna F) 🔥 NUEVO
+        const discountTopEl = document.getElementById('discount-text-top');
+        if (discountTopEl && discountTextTop) {
+            discountTopEl.textContent = discountTextTop;
+            updateCount++;
+            console.log('   ✅ Texto descuento arriba (F2)');
+        } else {
+            console.log('   ⚠️ Texto descuento arriba NO encontrado o vacío');
+        }
+        
+        // 8. TEXTO DESCUENTO ABAJO (Columna G) 🔥 NUEVO
+        const discountBottomEl = document.getElementById('discount-text-bottom');
+        if (discountBottomEl && discountTextBottom) {
+            discountBottomEl.textContent = discountTextBottom;
+            updateCount++;
+            console.log('   ✅ Texto descuento abajo (G2)');
+        } else {
+            console.log('   ⚠️ Texto descuento abajo NO encontrado o vacío');
+        }
+        
+        // ACTUALIZAR TRADUCCIONES EN TODOS LOS IDIOMAS
+        if (typeof translations !== 'undefined') {
+            console.log('   🌍 Actualizando traducciones en todos los idiomas...');
             
-            const csvText = await response.text();
-            
-            console.log(`📄 CSV recibido (primeras 300 chars):\n${csvText.substring(0, 300)}`);
-            
-            const lines = csvText.split('\n').filter(line => line.trim().length > 0);
-            
-            if (lines.length < 2) {
-                console.log(`⚠️ gid=${gid}: No hay suficientes líneas (solo ${lines.length})`);
-                continue;
-            }
-            
-            // Detectar delimitador
-            const delimiter = lines[0].includes(';') ? ';' : ',';
-            console.log(`🔍 Delimitador detectado: ${delimiter === ';' ? 'punto y coma (;)' : 'coma (,)'}`);
-            
-            // Parsear todas las líneas
-            const allRows = lines.map(line => parseCSVLine(line, delimiter));
-            
-            console.log(`📊 Total de filas parseadas: ${allRows.length}`);
-            
-            // Buscar la fila con encabezados "Texto_comercial" o datos válidos
-            let headerRow = -1;
-            let dataRow = -1;
-            
-            for (let i = 0; i < allRows.length; i++) {
-                const row = allRows[i];
-                console.log(`Fila ${i + 1}:`, row);
+            for (const lang in translations) {
+                translations[lang]['friends-title'] = `👥 ${titulo}`;
+                translations[lang]['friends-banner-title'] = bannerTitulo;
+                translations[lang]['friends-banner-intro'] = bannerIntro;
+                translations[lang]['friends-banner-code'] = codigoTexto;
+                translations[lang]['friends-conditions-intro'] = condicionesIntro;
                 
-                // Verificar si es fila de encabezados
-                if (row[0] && row[0].toLowerCase().includes('texto') || 
-                    row[1] && row[1].toLowerCase().includes('condiciones')) {
-                    headerRow = i;
-                    console.log(`✅ Encontrados encabezados en fila ${i + 1}`);
-                }
-                
-                // Verificar si es fila de datos (texto largo en columnas)
-                if (row[0] && row[0].length > 20 && row[1] && row[1].length > 20) {
-                    dataRow = i;
-                    console.log(`✅ Encontrados datos en fila ${i + 1}`);
-                }
-            }
-            
-            // Si encontramos datos, usarlos
-            if (dataRow >= 0) {
-                const dataLine = allRows[dataRow];
-                
-                // Columna A: Texto comercial
-                const textoComercial = (dataLine[0] || '').replace(/"/g, '');
-                
-                // Columna B: Párrafo de condiciones
-                const condicionesIntro = (dataLine[1] || '').replace(/"/g, '');
-                
-                // Columna C: Los 5 puntos (pueden estar separados por ; o por saltos de línea)
-                let condicionesRaw = (dataLine[2] || '').replace(/"/g, '');
-                
-                // Si está cortado, intentar buscar en las siguientes celdas
-                if (dataLine.length > 3) {
-                    // Puede que las condiciones estén en múltiples celdas
-                    condicionesRaw = dataLine.slice(2).join(';');
-                }
-                
-                const condicionesPuntos = condicionesRaw
-                    .split(/[;\n]/)
-                    .map(c => c.trim())
-                    .filter(c => c.length > 5);
-                
-                console.log('\n🎯 TEXTOS ENCONTRADOS:');
-                console.log('─────────────────────────────────────────');
-                console.log('1️⃣ Texto Comercial:');
-                console.log(textoComercial.substring(0, 100) + '...');
-                console.log('\n2️⃣ Condiciones Intro:');
-                console.log(condicionesIntro.substring(0, 100) + '...');
-                console.log('\n3️⃣ Condiciones Puntos:');
-                condicionesPuntos.forEach((punto, idx) => {
-                    console.log(`   ${idx + 1}. ${punto.substring(0, 50)}...`);
-                });
-                console.log('─────────────────────────────────────────\n');
-                
-                // Validar que tenemos datos
-                if (!textoComercial || textoComercial.length < 10) {
-                    console.log(`⚠️ gid=${gid}: Texto comercial muy corto o vacío`);
-                    continue;
-                }
-                
-                // GUARDAR EN EL OBJETO DE TRADUCCIONES (español)
-                console.log('💾 Guardando textos en las traducciones de español...');
-                
-                // Actualizar las traducciones de español con los textos de Google Sheets
-                if (typeof translations !== 'undefined' && translations['es']) {
-                    translations['es']['friends-banner-code'] = textoComercial;
-                    translations['es']['friends-conditions-intro'] = condicionesIntro;
-                    
-                    for (let i = 0; i < Math.min(5, condicionesPuntos.length); i++) {
-                        if (condicionesPuntos[i]) {
-                            translations['es'][`friends-condition-${i + 1}`] = condicionesPuntos[i];
-                        }
+                for (let i = 0; i < Math.min(5, puntosArray.length); i++) {
+                    if (puntosArray[i]) {
+                        translations[lang][`friends-condition-${i + 1}`] = puntosArray[i];
                     }
-                    
-                    console.log('✅ Traducciones de español actualizadas con datos de Google Sheets');
-                } else {
-                    console.warn('⚠️ Objeto de traducciones no disponible');
                 }
-                
-                // APLICAR TRADUCCIÓN SEGÚN EL IDIOMA ACTUAL
-                // Esto asegura que si el usuario está en otro idioma, se mantengan las traducciones
-                console.log('🌍 Aplicando traducciones según idioma actual...');
-                translatePanel();
-                
-                let updates = 7; // 1 banner + 1 intro + 5 condiciones
-                
-                if (updates > 0) {
-                    console.log(`\n🎉 ¡ÉXITO! Se actualizaron ${updates} elementos con gid=${gid}`);
-                    console.log('✅ Todos los textos dinámicos cargados correctamente\n');
-                    return; // Éxito, salir de la función
-                } else {
-                    console.log(`⚠️ gid=${gid}: No se pudo actualizar ningún elemento`);
-                }
-                
-            } else {
-                console.log(`⚠️ gid=${gid}: No se encontraron datos válidos en esta hoja`);
             }
-            
-        } catch (error) {
-            console.log(`❌ Error con gid=${gid}:`, error.message);
+            console.log('   ✅ Traducciones actualizadas en todos los idiomas');
         }
+        
+        console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log(`🎉 ¡ÉXITO! ${updateCount} ELEMENTOS ACTUALIZADOS`);
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+        
+        
+    } catch (error) {
+        console.error('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.error('❌ ERROR AL CARGAR TEXTOS');
+        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.error(`Error: ${error.message}`);
+        console.error('\n🔧 SOLUCIONES:');
+        console.error('1. Verifica que el spreadsheet sea PÚBLICO');
+        console.error('2. Abre: https://docs.google.com/spreadsheets/d/1kLfQOZnTsBJ8lRXA0ab5RXk-QM3VeSRkDQsatL3-tVk/');
+        console.error('3. Click "Compartir" → "Cualquiera con el enlace" → "Lector"');
+        console.error('4. Verifica que el gid=514707142 sea correcto');
+        console.error('5. Estructura esperada:');
+        console.error('   A: Título');
+        console.error('   B: Banner (título + intro)');
+        console.error('   C: Texto del código');
+        console.error('   D: Condiciones intro');
+        console.error('   E: Condiciones puntos (separados por ;)');
+        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
     }
-    
-    // Si llegamos aquí, ningún gid funcionó
-    console.error('\n❌ ERROR CRÍTICO: No se pudo cargar la Hoja 2 con ningún gid');
-    console.error('🔧 SOLUCIONES:');
-    console.error('1. Verifica que la hoja sea PÚBLICA (Compartir > Cualquier persona con el enlace)');
-    console.error('2. Abre tu Google Sheet y mira la URL cuando estés en la Hoja 2');
-    console.error('3. Busca "#gid=XXXXX" en la URL y anota ese número');
-    console.error('4. Edita el código y cambia la línea 22960 con ese gid\n');
 }
 
 // ========== COMPARATIVA DE PRECIOS CON DATOS REALES ==========
@@ -23336,8 +23440,9 @@ async function showComparison() {
         // Cargar tarifas primero
         if (typeof fetchTariffsFromSheet === 'function') {
             try {
-                await fetchTariffsFromSheet('2.0TD');
-                console.log('✅ Tarifas cargadas para comparación');
+                // IMPORTANTE: Usar false para cargar desde el spreadsheet de COMPARATIVA
+                await fetchTariffsFromSheet('2.0TD', false);
+                console.log('✅ Tarifas cargadas para comparación desde spreadsheet de COMPARATIVA');
                 
                 // Esperar un momento y luego generar la comparación
                 setTimeout(() => generateComparison(), 500);
@@ -24423,6 +24528,19 @@ document.addEventListener('DOMContentLoaded', function() {
                                 </div>
                                 <div style="font-size: 0.875rem; color: #0c4a6e;">
                                     Valle: <strong id="plan-amigo-p3-price" style="color: #2596be;">--</strong> €/kWh
+                                </div>
+                                
+                                <!-- 🔥 NUEVO: Mensaje de descuento en ROJO y grande -->
+                                <div style="margin-top: 1rem; padding: 0.75rem; background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border-radius: 0.5rem; border: 2px solid #ef4444; text-align: center;">
+                                    <div id="discount-text-top" style="font-size: 0.75rem; color: #991b1b; font-weight: 600; margin-bottom: 0.25rem;">
+                                        CONSIGUE TU CÓDIGO AMIGO
+                                    </div>
+                                    <div style="font-size: 2rem; font-weight: 800; color: #dc2626; line-height: 1; margin-bottom: 0.25rem;">
+                                        <span id="plan-amigo-discount" style="font-size: 2.5rem;">10</span> %
+                                    </div>
+                                    <div id="discount-text-bottom" style="font-size: 0.875rem; color: #991b1b; font-weight: 600;">
+                                        en tu energía
+                                    </div>
                                 </div>
                             </div>
                         </div>
