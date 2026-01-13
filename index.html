@@ -24146,11 +24146,23 @@ function renderComparisonHighlight(mejor, peor, mejorPrecio, peorPrecio, drkInde
             
             console.log(`  [${i}] ${nombreComercial}: Anual=${r.costeAnual.toFixed(2)}€`);
             
+            // Verificar si hay descuento
+            const tieneDescuento = tarifa.descuento && tarifa.descuento > 0;
+            const descuentoPorcentaje = tieneDescuento ? Math.round(tarifa.descuento) : 0;
+            
+            // Calcular precios con descuento aplicado
+            const p1_con_descuento = tieneDescuento ? (tarifa.p1_price * (1 - tarifa.descuento / 100)) : tarifa.p1_price;
+            const p2_con_descuento = tieneDescuento ? (tarifa.p2_price * (1 - tarifa.descuento / 100)) : tarifa.p2_price;
+            const p3_con_descuento = tieneDescuento ? (tarifa.p3_price * (1 - tarifa.descuento / 100)) : tarifa.p3_price;
+            
             competitorPricesHTML += `
-                <div style="background: #f8fafc; padding: 1.25rem; border-radius: 0.75rem; border: 2px solid #2596be;">
+                <div style="background: #f8fafc; padding: 1.25rem; border-radius: 0.75rem; border: 2px solid ${tieneDescuento ? '#10b981' : '#2596be'};">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-                        <div style="font-size: 0.875rem; font-weight: 700; color: #1e293b;">${nombreComercial}</div>
-                        <div style="font-size: 1.125rem; font-weight: 900; color: #2596be;">${Math.round(r.costeAnual)}€/año</div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <div style="font-size: 0.875rem; font-weight: 700; color: #1e293b;">${nombreComercial}</div>
+                            ${tieneDescuento ? `<span style="background: #10b981; color: white; font-size: 0.625rem; font-weight: 700; padding: 0.125rem 0.375rem; border-radius: 0.25rem;">-${descuentoPorcentaje}%</span>` : ''}
+                        </div>
+                        <div style="font-size: 1.125rem; font-weight: 900; color: ${tieneDescuento ? '#10b981' : '#2596be'};">${Math.round(r.costeAnual)}€/año</div>
                     </div>
                     
                     <div style="margin-bottom: 0.75rem;">
@@ -24166,16 +24178,18 @@ function renderComparisonHighlight(mejor, peor, mejorPrecio, peorPrecio, drkInde
                     </div>
                     
                     <div>
-                        <div style="font-size: 0.6875rem; font-weight: 600; color: #2596be; text-transform: uppercase; margin-bottom: 0.375rem;">⚡ Energía</div>
+                        <div style="font-size: 0.6875rem; font-weight: 600; color: #2596be; text-transform: uppercase; margin-bottom: 0.375rem;">
+                            ⚡ Energía ${tieneDescuento ? `<span style="color: #10b981; font-weight: 700;">(Descuento ${descuentoPorcentaje}% aplicado)</span>` : ''}
+                        </div>
                         <div style="display: grid; gap: 0.125rem;">
                             <div style="font-size: 0.75rem; color: #475569;">
-                                Punta: <strong>${(tarifa.p1_price || 0).toFixed(4)} €/kWh</strong>
+                                Punta: ${tieneDescuento ? `<span style="text-decoration: line-through; color: #94a3b8;">${(tarifa.p1_price || 0).toFixed(4)}</span> ` : ''}<strong style="color: ${tieneDescuento ? '#10b981' : '#1e293b'};">${p1_con_descuento.toFixed(4)} €/kWh</strong>
                             </div>
                             <div style="font-size: 0.75rem; color: #475569;">
-                                Llano: <strong>${(tarifa.p2_price || 0).toFixed(4)} €/kWh</strong>
+                                Llano: ${tieneDescuento ? `<span style="text-decoration: line-through; color: #94a3b8;">${(tarifa.p2_price || 0).toFixed(4)}</span> ` : ''}<strong style="color: ${tieneDescuento ? '#10b981' : '#1e293b'};">${p2_con_descuento.toFixed(4)} €/kWh</strong>
                             </div>
                             <div style="font-size: 0.75rem; color: #475569;">
-                                Valle: <strong>${(tarifa.p3_price || 0).toFixed(4)} €/kWh</strong>
+                                Valle: ${tieneDescuento ? `<span style="text-decoration: line-through; color: #94a3b8;">${(tarifa.p3_price || 0).toFixed(4)}</span> ` : ''}<strong style="color: ${tieneDescuento ? '#10b981' : '#1e293b'};">${p3_con_descuento.toFixed(4)} €/kWh</strong>
                             </div>
                         </div>
                     </div>
