@@ -189,6 +189,15 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        
+        /* Ocultar scrollbar en el contenedor de tabs */
+        #result-tabs-container::-webkit-scrollbar {
+            display: none;
+        }
+        #result-tabs-container {
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE and Edge */
+        }
     </style>
 </head>
     <style>
@@ -664,7 +673,7 @@
 <div id="panel-view">
     <!-- Selector de Idiomas -->
     <div class="panel-language-selector">
-        <select id="panel-language-selector" onchange="changePanelLanguage(this.value)">
+        <select id="panel-language-selector" onchange="currentPanelLanguage=this.value; localStorage.setItem('appLanguage',this.value); localStorage.setItem('selectedLanguage',this.value); changePanelLanguage(this.value); console.log('✅ Selector cambiado a:',this.value);">
             <option value="es">🇪🇸 Español</option>
             <option value="en">🇬🇧 English</option>
             <option value="pt">🇵🇹 Português</option>
@@ -1899,22 +1908,52 @@
                 <button onclick="document.getElementById('details-container').classList.toggle('hidden')" class="text-center text-drk-800 font-bold text-sm hover:underline flex items-center justify-center gap-1" id="details-toggle-btn" style="display: none;"><span id="details-toggle-text"></span></button>
             </div>
             
-            <!-- PESTAÑAS HORIZONTALES -->
+            <!-- PESTAÑAS HORIZONTALES CON NAVEGACIÓN -->
             <div class="mb-6">
-                <div class="flex gap-2 border-b-2 border-slate-200 mb-4 overflow-x-auto">
-                    <button onclick="switchResultTab('tab-resumen')" id="btn-tab-resumen" class="tab-result-btn px-6 py-3 font-bold text-sm transition-all border-b-4 border-transparent hover:border-drk-400 whitespace-nowrap active" data-i18n="Resumen">
-                        Resumen
+                <div class="relative">
+                    <!-- Flecha Izquierda -->
+                    <button onclick="scrollResultTabs('left')" 
+                            id="scroll-tabs-left"
+                            class="absolute left-0 top-0 bottom-0 z-10 bg-gradient-to-r from-white to-transparent hover:from-slate-100 px-3 text-slate-600 hover:text-drk-600 transition-colors hidden md:block"
+                            style="box-shadow: 2px 0 8px rgba(0,0,0,0.1);">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
                     </button>
-                    <button onclick="switchResultTab('tab-precios')" id="btn-tab-precios" class="tab-result-btn px-6 py-3 font-bold text-sm transition-all border-b-4 border-transparent hover:border-drk-400 whitespace-nowrap" data-i18n="Precios">
-                        Precios
-                    </button>
-                    <button onclick="switchResultTab('tab-calculo')" id="btn-tab-calculo" class="tab-result-btn px-6 py-3 font-bold text-sm transition-all border-b-4 border-transparent hover:border-drk-400 whitespace-nowrap" data-i18n="Cálculo Oficial">
-                        Cálculo Oficial
+                    
+                    <!-- Contenedor de Tabs con Scroll -->
+                    <div id="result-tabs-container" class="flex gap-2 border-b-2 border-slate-200 mb-4 overflow-x-auto scroll-smooth" style="scroll-behavior: smooth; scrollbar-width: none; -ms-overflow-style: none;">
+                        <button onclick="switchResultTab('tab-horarios')" id="btn-tab-horarios" class="tab-result-btn px-6 py-3 font-bold text-sm transition-all border-b-4 border-transparent hover:border-drk-400 whitespace-nowrap active" data-i18n="Análisis de Horarios">
+                            🕐 Análisis de Horarios
+                        </button>
+                        <button onclick="switchResultTab('tab-resumen')" id="btn-tab-resumen" class="tab-result-btn px-6 py-3 font-bold text-sm transition-all border-b-4 border-transparent hover:border-drk-400 whitespace-nowrap" data-i18n="Resumen">
+                            Resumen
+                        </button>
+                        <button onclick="switchResultTab('tab-precios')" id="btn-tab-precios" class="tab-result-btn px-6 py-3 font-bold text-sm transition-all border-b-4 border-transparent hover:border-drk-400 whitespace-nowrap" data-i18n="Precios">
+                            Precios
+                        </button>
+                        <button onclick="switchResultTab('tab-calculo')" id="btn-tab-calculo" class="tab-result-btn px-6 py-3 font-bold text-sm transition-all border-b-4 border-transparent hover:border-drk-400 whitespace-nowrap" data-i18n="Cálculo Oficial">
+                            Cálculo Oficial
+                        </button>
+                    </div>
+                    
+                    <!-- Flecha Derecha -->
+                    <button onclick="scrollResultTabs('right')" 
+                            id="scroll-tabs-right"
+                            class="absolute right-0 top-0 bottom-0 z-10 bg-gradient-to-l from-white to-transparent hover:from-slate-100 px-3 text-slate-600 hover:text-drk-600 transition-colors hidden md:block"
+                            style="box-shadow: -2px 0 8px rgba(0,0,0,0.1);">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
                     </button>
                 </div>
                 
                 <!-- Contenido de pestañas -->
-                <div id="tab-resumen" class="tab-result-content">
+                <div id="tab-horarios" class="tab-result-content">
+                    <div id="horarios-content" class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm"></div>
+                </div>
+                
+                <div id="tab-resumen" class="tab-result-content hidden">
                     <div id="resumen-content" class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm"></div>
                 </div>
                 
@@ -2073,11 +2112,16 @@
                 <h3 class="text-xl font-bold text-drk-800 mb-4" data-i18n="Request Improvement from DRK">Solicitar Mejora a DRK</h3>
                 <p class="text-sm text-slate-600 mb-4" data-i18n="Complete los datos para que el equipo de Back Office pueda revisar este comparativo y buscar una mejor opción.">Complete los datos para que el equipo de Back Office pueda revisar este comparativo y buscar una mejor opción.</p>
                 
-                <input type="text" id="improvement-comercial-code" data-i18n-placeholder="CÓDIGO COMERCIAL (Obligatorio)" placeholder="CÓDIGO COMERCIAL (Obligatorio)" class="w-full mb-3 p-3 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 outline-none">
-                <input type="text" id="improvement-client-name" data-i18n-placeholder="Nombre Cliente" placeholder="Nombre Cliente" class="w-full mb-3 p-3 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 outline-none">
-                <input type="text" id="improvement-client-cups" data-i18n-placeholder="CUPS" placeholder="CUPS" class="w-full mb-3 p-3 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 outline-none">
-                <input type="tel" id="improvement-client-phone" data-i18n-placeholder="Teléfono" placeholder="Teléfono" class="w-full mb-3 p-3 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 outline-none">
-                <input type="email" id="improvement-client-email" data-i18n-placeholder="Email" placeholder="Email" class="w-full mb-3 p-3 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 outline-none">
+                <!-- OCULTO: Código Comercial (no necesario para cliente final) -->
+                <input type="text" id="improvement-comercial-code" data-i18n-placeholder="CÓDIGO COMERCIAL (Obligatorio)" placeholder="CÓDIGO COMERCIAL (Obligatorio)" class="w-full mb-3 p-3 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 outline-none" style="display: none;">
+                
+                <input type="text" id="improvement-client-name" data-i18n-placeholder="Nombre Cliente (Opcional)" placeholder="Nombre Cliente (Opcional)" class="w-full mb-3 p-3 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 outline-none">
+                
+                <!-- OCULTO: CUPS (no necesario para cliente final) -->
+                <input type="text" id="improvement-client-cups" data-i18n-placeholder="CUPS" placeholder="CUPS" class="w-full mb-3 p-3 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 outline-none" style="display: none;">
+                
+                <input type="tel" id="improvement-client-phone" data-i18n-placeholder="Teléfono (Opcional)" placeholder="Teléfono (Opcional)" class="w-full mb-3 p-3 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 outline-none">
+                <input type="email" id="improvement-client-email" data-i18n-placeholder="Email (Opcional)" placeholder="Email (Opcional)" class="w-full mb-3 p-3 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 outline-none">
                 <textarea id="improvement-observations" data-i18n-placeholder="Observaciones (opcional)" placeholder="Observaciones (opcional)" rows="3" class="w-full mb-4 p-3 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 outline-none resize-none"></textarea>
                 
                 <!-- Recordatorio -->
@@ -3174,17 +3218,13 @@
                 ieRate: IE_RATE
             };
             
-            // NOTA: Para la comparativa, NO forzamos la tarifa actual aunque el ahorro sea negativo
-            // Necesitamos los valores REALES de cada comercializadora
-            // Esta lógica solo aplica en el calculador normal
-            /*
+            // Si el ahorro es negativo, forzar la tarifa actual como mejor
             if (result.savings <= 0) {
                 result.isNegativeSavings = true;
                 result.savings = 0;
                 result.totalAnnual = result.originalBillAnnual;  
                 result.offer = { name: "Tu Tarifa Actual", description: "Es la mejor opción detectada", isDrk: false };
             }
-            */
             
             return result;
         }
@@ -4956,14 +4996,131 @@
                 }
             }
             
-            // NUEVO: Llenar las 3 pestañas con contenido
+            // NUEVO: Llenar las 4 pestañas con contenido
+            
+            // PESTAÑA 1: Análisis de Horarios (NUEVO)
+            const puntaKwh = res.consumo_punta || 0;
+            const llanoKwh = res.consumo_llano || 0;
+            const valleKwh = res.consumo_valle || 0;
+            const totalKwh = puntaKwh + llanoKwh + valleKwh;
+            const puntaPct = totalKwh > 0 ? ((puntaKwh / totalKwh) * 100).toFixed(1) : 0;
+            const llanoPct = totalKwh > 0 ? ((llanoKwh / totalKwh) * 100).toFixed(1) : 0;
+            const vallePct = totalKwh > 0 ? ((valleKwh / totalKwh) * 100).toFixed(1) : 0;
+            
+            document.getElementById('horarios-content').innerHTML = `
+                <h3 class="text-xl font-black text-slate-800 mb-6 flex items-center gap-3">
+                    <svg class="w-6 h-6 text-drk-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    ${tr('Análisis de Horarios y Consumo - Tarifa 2.0 TD')}
+                </h3>
+                
+                <!-- Información de Horarios -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="bg-white p-4 rounded-xl shadow-md border border-slate-200">
+                        <h4 class="text-center font-bold text-slate-700 mb-3">${tr('Lunes a viernes laborables')}</h4>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex items-center gap-2 p-2 bg-red-50 rounded"><span class="w-3 h-3 rounded-full bg-red-600 flex-shrink-0"></span><span class="font-semibold text-red-700">${tr('Punta')}:</span><span class="text-slate-600">10-14h, 18-22h</span></div>
+                            <div class="flex items-center gap-2 p-2 bg-yellow-50 rounded"><span class="w-3 h-3 rounded-full bg-yellow-400 flex-shrink-0"></span><span class="font-semibold text-yellow-700">${tr('Llano')}:</span><span class="text-slate-600">8-10h, 14-18h, 22-24h</span></div>
+                            <div class="flex items-center gap-2 p-2 bg-green-50 rounded"><span class="w-3 h-3 rounded-full bg-green-600 flex-shrink-0"></span><span class="font-semibold text-green-700">${tr('Valle')}:</span><span class="text-slate-600">0-8h</span></div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-4 rounded-xl shadow-md border border-slate-200">
+                        <h4 class="text-center font-bold text-slate-700 mb-3">${tr('Sábados, domingos y festivos')}</h4>
+                        <div class="flex items-center justify-center h-full">
+                            <div class="text-center p-4 bg-green-50 rounded-lg w-full">
+                                <div class="flex items-center justify-center gap-2 mb-2">
+                                    <span class="w-4 h-4 rounded-full bg-green-600"></span>
+                                    <span class="font-bold text-green-700 text-lg">${tr('Valle')}</span>
+                                </div>
+                                <p class="text-sm text-slate-600">24 horas (todo el día)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Análisis de Consumo -->
+                <div class="bg-white p-6 rounded-xl shadow-md border border-slate-200">
+                    <h4 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-drk-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                        ${tr('Tu Distribución de Consumo')}
+                    </h4>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <!-- Punta -->
+                        <div class="text-center p-4 bg-red-50 rounded-lg border-2 border-red-200">
+                            <div class="flex items-center justify-center gap-2 mb-2">
+                                <div class="w-4 h-4 rounded-full bg-red-600"></div>
+                                <h5 class="font-bold text-red-700">${tr('Periodo Punta')}</h5>
+                            </div>
+                            <div class="text-3xl font-black text-red-600 mb-1">${puntaPct}%</div>
+                            <div class="text-sm text-slate-600 mb-2">${puntaKwh.toFixed(0)} kWh</div>
+                            <div class="text-xs text-slate-500 bg-white p-2 rounded">${tr('Horario más caro')}<br>10-14h, 18-22h (lab.)</div>
+                        </div>
+                        
+                        <!-- Llano -->
+                        <div class="text-center p-4 bg-yellow-50 rounded-lg border-2 border-yellow-300">
+                            <div class="flex items-center justify-center gap-2 mb-2">
+                                <div class="w-4 h-4 rounded-full bg-yellow-400"></div>
+                                <h5 class="font-bold text-yellow-700">${tr('Periodo Llano')}</h5>
+                            </div>
+                            <div class="text-3xl font-black text-yellow-600 mb-1">${llanoPct}%</div>
+                            <div class="text-sm text-slate-600 mb-2">${llanoKwh.toFixed(0)} kWh</div>
+                            <div class="text-xs text-slate-500 bg-white p-2 rounded">${tr('Horario intermedio')}<br>8-10h, 14-18h, 22-24h</div>
+                        </div>
+                        
+                        <!-- Valle -->
+                        <div class="text-center p-4 bg-green-50 rounded-lg border-2 border-green-200">
+                            <div class="flex items-center justify-center gap-2 mb-2">
+                                <div class="w-4 h-4 rounded-full bg-green-600"></div>
+                                <h5 class="font-bold text-green-700">${tr('Periodo Valle')}</h5>
+                            </div>
+                            <div class="text-3xl font-black text-green-600 mb-1">${vallePct}%</div>
+                            <div class="text-sm text-slate-600 mb-2">${valleKwh.toFixed(0)} kWh</div>
+                            <div class="text-xs text-slate-500 bg-white p-2 rounded">${tr('Horario más barato')}<br>0-8h + fines semana</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Barra de progreso visual -->
+                    <div class="mb-4">
+                        <div class="flex h-8 rounded-lg overflow-hidden shadow-inner">
+                            <div class="bg-red-600 flex items-center justify-center text-white text-xs font-bold" 
+                                 style="width: ${puntaPct}%">${parseFloat(puntaPct) > 8 ? puntaPct + '%' : ''}</div>
+                            <div class="bg-yellow-400 flex items-center justify-center text-slate-800 text-xs font-bold" 
+                                 style="width: ${llanoPct}%">${parseFloat(llanoPct) > 8 ? llanoPct + '%' : ''}</div>
+                            <div class="bg-green-600 flex items-center justify-center text-white text-xs font-bold" 
+                                 style="width: ${vallePct}%">${parseFloat(vallePct) > 8 ? vallePct + '%' : ''}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Consejo personalizado -->
+                    <div class="bg-blue-50 border-l-4 border-drk-600 p-4 rounded-r-lg">
+                        <div class="flex items-start gap-3">
+                            <svg class="w-6 h-6 text-drk-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+                            <div>
+                                <p class="font-bold text-drk-800 mb-2">${tr('💡 Consejo de Ahorro:')}</p>
+                                <p class="text-sm text-slate-700 leading-relaxed">
+                                    ${parseFloat(puntaPct) > 35 ? 
+                                        tr('Tu consumo en horario PUNTA es alto. Intenta usar electrodomésticos de alto consumo (lavadora, secadora, lavavajillas) en horario VALLE (0-8h) o fines de semana para reducir tu factura.') : 
+                                        parseFloat(vallePct) > 50 ?
+                                        tr('¡Excelente! Estás aprovechando bien el horario VALLE. Sigue consumiendo en estos horarios para maximizar tu ahorro.') :
+                                        tr('Puedes optimizar tu consumo desplazando algunos electrodomésticos a horarios más económicos (VALLE: 0-8h y fines de semana).')}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // PESTAÑA 2: Resumen
             document.getElementById('resumen-content').innerHTML = `
                 <h3 class="text-lg font-bold text-slate-800 mb-4">${tr('Datos Extraídos')}</h3>
                 ${consumptionHTML}
             `;
             
+            // PESTAÑA 3: Precios
             document.getElementById('precios-content').innerHTML = preciosHTML || '<p class="text-slate-500">No hay información de precios disponible.</p>';
             
+            // PESTAÑA 4: Cálculo Oficial
             document.getElementById('calculo-content').innerHTML = `
                 <h3 class="text-lg font-bold text-slate-800 mb-4">${tr('Cálculo Oficial')}</h3>
                 ${breakdownHTML}
@@ -6878,17 +7035,15 @@
                 return window.showErrorModal("Primero realice una comparación.");
             }
             
-            // Validar campos obligatorios
-            const commercialCode = document.getElementById('improvement-comercial-code').value.trim();
-            const clientName = document.getElementById('improvement-client-name').value.trim();
-            const cups = document.getElementById('improvement-client-cups').value.trim();
-            const phone = document.getElementById('improvement-client-phone').value.trim();
-            const email = document.getElementById('improvement-client-email').value.trim();
-            const observations = document.getElementById('improvement-observations').value.trim();
+            // Obtener campos (todos opcionales ahora)
+            const commercialCode = document.getElementById('improvement-comercial-code').value.trim() || 'N/A';
+            const clientName = document.getElementById('improvement-client-name').value.trim() || 'Cliente';
+            const cups = document.getElementById('improvement-client-cups').value.trim() || 'N/A';
+            const phone = document.getElementById('improvement-client-phone').value.trim() || 'N/A';
+            const email = document.getElementById('improvement-client-email').value.trim() || 'N/A';
+            const observations = document.getElementById('improvement-observations').value.trim() || 'Sin observaciones';
             
-            if (!commercialCode) {
-                return window.showErrorModal("El Código Comercial es obligatorio.");
-            }
+            // Ya no hay validación de campos obligatorios - todos son opcionales para cliente final
             
             try {
                 let htmlContent = '';
@@ -7387,30 +7542,32 @@ Desglose mensual estimado:
                 }
                 
                 // 3. Preparar el contenido del email (MUY CORTO para evitar límites de mailto)
-                const emailSubject = `Solicitud Mejora ${tipoSuministro} - ${clientName || 'Cliente'} - ${cups || 'Sin CUPS'}`;
+                const emailSubject = `Solicitud Estudio Personalizado - ${clientName || 'Cliente'}`;
                 
-                const emailBody = `SOLICITUD DE MEJORA - ${tipoSuministro}
+                const emailBody = `SOLICITUD DE ESTUDIO PERSONALIZADO - ${tipoSuministro}
 
-Comercial: ${commercialCode}
 Cliente: ${clientName || 'No proporcionado'}
-CUPS: ${cups || 'No proporcionado'}
+Teléfono: ${phone || 'No proporcionado'}
+Email: ${email || 'No proporcionado'}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⚠️ INSTRUCCIONES IMPORTANTES:
+📋 INSTRUCCIONES:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-1. PEGAR contenido completo (Ctrl+V) debajo de este texto
+1. PEGAR el contenido de la comparativa (Ctrl+V) debajo de este texto
    → El contenido está copiado en el portapapeles
 
-2. ADJUNTAR facturas OBLIGATORIAS:
-   📄 Factura usada para el estudio
-   📄 Factura más actualizada del cliente
+2. ADJUNTAR tus facturas de luz:
+   📄 Factura que has analizado
+   📄 Tu factura más reciente (si es diferente)
 
-3. ENVIAR email
+3. ENVIAR este email
+
+Nuestro equipo revisará tu caso y te contactará con una oferta personalizada.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-[PEGAR AQUÍ EL CONTENIDO COMPLETO CON CTRL+V]
+[PEGAR AQUÍ EL CONTENIDO CON CTRL+V]
 
 `;
 
@@ -7423,45 +7580,44 @@ CUPS: ${cups || 'No proporcionado'}
                 tempElement.contentEditable = true;
                 tempElement.innerHTML = `
                     <div style="font-family: Arial, sans-serif;">
-                        <h2 style="color: #E50000;">SOLICITUD DE MEJORA DE COMPARATIVO - ${tipoSuministro}</h2>
-                        <p><strong>El comercial ${commercialCode} solicita una mejora de este comparativo.</strong></p>
+                        <h2 style="color: #0EA5E9;">SOLICITUD DE ESTUDIO PERSONALIZADO - ${tipoSuministro}</h2>
+                        <p><strong>Solicito que el equipo de DRK revise mi caso y me ofrezca una tarifa personalizada.</strong></p>
                         
                         <div style="background-color: #E0F2FE; border-left: 4px solid #0EA5E9; padding: 12px; margin: 16px 0;">
                             <p style="margin: 0; font-weight: bold;">📋 TIPO DE SUMINISTRO: ${tipoSuministro}</p>
                         </div>
                         
-                        <h3>DATOS DEL CLIENTE:</h3>
+                        <h3>MIS DATOS:</h3>
                         <ul>
                             <li><strong>Nombre:</strong> ${clientName || 'No proporcionado'}</li>
-                            <li><strong${tr("CUPS:")}</strong> ${cups || 'No proporcionado'}</li>
                             <li><strong>Teléfono:</strong> ${phone || 'No proporcionado'}</li>
                             <li><strong>Email:</strong> ${email || 'No proporcionado'}</li>
                             ${observations ? `<li><strong>Observaciones:</strong> ${observations}</li>` : ''}
                         </ul>
                         
                         <div style="background-color: #FEF3C7; border: 2px solid #F59E0B; border-radius: 8px; padding: 16px; margin: 20px 0;">
-                            <h3 style="margin: 0 0 12px 0; color: #92400E; font-size: 18px;">⚠️ IMPORTANTE - FACTURAS A ADJUNTAR:</h3>
+                            <h3 style="margin: 0 0 12px 0; color: #92400E; font-size: 18px;">📄 FACTURAS ADJUNTAS:</h3>
                             <div style="background-color: white; padding: 12px; border-radius: 6px; margin-bottom: 8px;">
-                                <p style="margin: 0; font-weight: bold; color: #92400E;">📄 1. La factura UTILIZADA para realizar este estudio</p>
-                                <p style="margin: 4px 0 0 0; font-size: 13px; color: #78350F;">Esta es la factura que el comercial ha analizado para hacer la comparativa</p>
+                                <p style="margin: 0; font-weight: bold; color: #92400E;">✅ Factura analizada</p>
+                                <p style="margin: 4px 0 0 0; font-size: 13px; color: #78350F;">La factura que he usado para hacer esta comparativa</p>
                             </div>
                             <div style="background-color: white; padding: 12px; border-radius: 6px;">
-                                <p style="margin: 0; font-weight: bold; color: #92400E;">📄 2. La factura MÁS ACTUALIZADA del cliente</p>
-                                <p style="margin: 4px 0 0 0; font-size: 13px; color: #78350F;">Si es la misma factura que la del estudio, adjuntar solo una vez</p>
+                                <p style="margin: 0; font-weight: bold; color: #92400E;">✅ Mi factura más reciente</p>
+                                <p style="margin: 4px 0 0 0; font-size: 13px; color: #78350F;">(Si es la misma, solo la adjunto una vez)</p>
                             </div>
                             <p style="margin: 12px 0 0 0; font-size: 12px; color: #92400E; font-style: italic;">
-                                ℹ️ Estas facturas son necesarias para que Back Office pueda verificar los datos y mejorar el comparativo
+                                ℹ️ Con estas facturas, el equipo de DRK podrá revisar mi caso y ofrecerme la mejor tarifa posible
                             </p>
                         </div>
                         
                         <hr style="margin: 24px 0;">
                         
-                        <h3>COMPARATIVO:</h3>
+                        <h3>RESULTADO DE MI COMPARATIVA:</h3>
                         ${htmlContent}
                         
                         <hr style="margin: 24px 0;">
                         
-                        <h3>DESGLOSE DETALLADO DE CÁLCULOS:</h3>
+                        <h3>DETALLES TÉCNICOS:</h3>
                         <pre style="background-color: #f5f5f5; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 12px;">${desglose}</pre>
                     </div>
                 `;
@@ -14496,6 +14652,26 @@ Destinatarios: F.araujo@drk.es, rguerra@drk.es, l.grande@drk.es
             // Activar el botón correspondiente
             document.getElementById('btn-' + tabId).classList.add('active');
         }
+        
+        // Función para hacer scroll en los tabs de resultados
+        function scrollResultTabs(direction) {
+            const container = document.getElementById('result-tabs-container');
+            if (!container) return;
+            
+            const scrollAmount = 200; // Píxeles a desplazar
+            
+            if (direction === 'left') {
+                container.scrollBy({
+                    left: -scrollAmount,
+                    behavior: 'smooth'
+                });
+            } else if (direction === 'right') {
+                container.scrollBy({
+                    left: scrollAmount,
+                    behavior: 'smooth'
+                });
+            }
+        }
 
         function goToInicio() {
             // Limpiar flag de modo DUAL
@@ -21487,6 +21663,102 @@ ${clientName}
                 "Potencia Contratada (kW)": { en: "Contracted Power (kW)", zh: "签约功率 (kW)", de: "Vertragsleistung (kW)", fr: "Puissance Contractée (kW)" },
                 
                 // Interfaz de resultados
+                "Análisis de Horarios": { 
+                    en: "Schedule Analysis", 
+                    zh: "时间表分析", 
+                    de: "Zeitplananalyse", 
+                    fr: "Analyse des Horaires" 
+                },
+                "Análisis de Horarios y Consumo - Tarifa 2.0 TD": { 
+                    en: "Schedule and Consumption Analysis - Tariff 2.0 TD", 
+                    zh: "时间表和消耗分析 - 资费 2.0 TD", 
+                    de: "Zeitplan- und Verbrauchsanalyse - Tarif 2.0 TD", 
+                    fr: "Analyse des Horaires et de la Consommation - Tarif 2.0 TD" 
+                },
+                "Lunes a viernes laborables": { 
+                    en: "Monday to Friday (working days)", 
+                    zh: "周一至周五（工作日）", 
+                    de: "Montag bis Freitag (Werktage)", 
+                    fr: "Lundi au vendredi (jours ouvrables)" 
+                },
+                "Sábados, domingos y festivos": { 
+                    en: "Saturdays, Sundays and holidays", 
+                    zh: "周六、周日和节假日", 
+                    de: "Samstags, sonntags und an Feiertagen", 
+                    fr: "Samedis, dimanches et jours fériés" 
+                },
+                "Tu Distribución de Consumo": { 
+                    en: "Your Consumption Distribution", 
+                    zh: "您的消耗分布", 
+                    de: "Ihre Verbrauchsverteilung", 
+                    fr: "Votre Distribution de Consommation" 
+                },
+                "Periodo Punta": { 
+                    en: "Peak Period", 
+                    zh: "峰值时段", 
+                    de: "Spitzenlastperiode", 
+                    fr: "Période de Pointe" 
+                },
+                "Periodo Llano": { 
+                    en: "Flat Period", 
+                    zh: "平段时期", 
+                    de: "Mittellastperiode", 
+                    fr: "Période Pleine" 
+                },
+                "Periodo Valle": { 
+                    en: "Valley Period", 
+                    zh: "谷段时期", 
+                    de: "Schwachlastperiode", 
+                    fr: "Période Creuse" 
+                },
+                "Horario más caro": { 
+                    en: "Most expensive schedule", 
+                    zh: "最贵的时段", 
+                    de: "Teuerste Zeit", 
+                    fr: "Horaire le plus cher" 
+                },
+                "Horario intermedio": { 
+                    en: "Intermediate schedule", 
+                    zh: "中间时段", 
+                    de: "Zwischenzeit", 
+                    fr: "Horaire intermédiaire" 
+                },
+                "Horario más barato": { 
+                    en: "Cheapest schedule", 
+                    zh: "最便宜的时段", 
+                    de: "Günstigste Zeit", 
+                    fr: "Horaire le moins cher" 
+                },
+                "0-8h + fines semana": { 
+                    en: "0-8h + weekends", 
+                    zh: "0-8时 + 周末", 
+                    de: "0-8 Uhr + Wochenenden", 
+                    fr: "0-8h + week-ends" 
+                },
+                "💡 Consejo de Ahorro:": { 
+                    en: "💡 Savings Tip:", 
+                    zh: "💡 节省小贴士：", 
+                    de: "💡 Spartipp:", 
+                    fr: "💡 Conseil d'Économie:" 
+                },
+                "Tu consumo en horario PUNTA es alto. Intenta usar electrodomésticos de alto consumo (lavadora, secadora, lavavajillas) en horario VALLE (0-8h) o fines de semana para reducir tu factura.": {
+                    en: "Your consumption during PEAK hours is high. Try using high-consumption appliances (washing machine, dryer, dishwasher) during VALLEY hours (0-8h) or weekends to reduce your bill.",
+                    zh: "您在高峰时段的消耗很高。尝试在谷段时间（0-8时）或周末使用高消耗电器（洗衣机、烘干机、洗碗机）以减少账单。",
+                    de: "Ihr Verbrauch während der SPITZENZEITEN ist hoch. Versuchen Sie, energieintensive Geräte (Waschmaschine, Trockner, Geschirrspüler) während der TALZEITEN (0-8 Uhr) oder am Wochenende zu verwenden, um Ihre Rechnung zu reduzieren.",
+                    fr: "Votre consommation pendant les heures de POINTE est élevée. Essayez d'utiliser des appareils à forte consommation (lave-linge, sèche-linge, lave-vaisselle) pendant les heures CREUSES (0-8h) ou le week-end pour réduire votre facture."
+                },
+                "¡Excelente! Estás aprovechando bien el horario VALLE. Sigue consumiendo en estos horarios para maximizar tu ahorro.": {
+                    en: "Excellent! You are making good use of VALLEY hours. Keep consuming during these hours to maximize your savings.",
+                    zh: "太好了！您很好地利用了谷段时间。继续在这些时段消费以最大化您的节省。",
+                    de: "Ausgezeichnet! Sie nutzen die TALZEITEN gut. Verbrauchen Sie weiterhin in diesen Zeiten, um Ihre Einsparungen zu maximieren.",
+                    fr: "Excellent ! Vous utilisez bien les heures CREUSES. Continuez à consommer pendant ces heures pour maximiser vos économies."
+                },
+                "Puedes optimizar tu consumo desplazando algunos electrodomésticos a horarios más económicos (VALLE: 0-8h y fines de semana).": {
+                    en: "You can optimize your consumption by shifting some appliances to more economical schedules (VALLEY: 0-8h and weekends).",
+                    zh: "您可以通过将一些电器转移到更经济的时段（谷段：0-8时和周末）来优化消耗。",
+                    de: "Sie können Ihren Verbrauch optimieren, indem Sie einige Geräte in wirtschaftlichere Zeiten verlegen (TAL: 0-8 Uhr und Wochenenden).",
+                    fr: "Vous pouvez optimiser votre consommation en déplaçant certains appareils vers des horaires plus économiques (CREUSE: 0-8h et week-ends)."
+                },
                 "Resumen": { en: "Summary", zh: "摘要", pt: "Resumo", fr: "Résumé" },
                 "Precios": { en: "Prices", zh: "价格", pt: "Preços", fr: "Prix" },
                 "Datos Extraídos": { en: "Extracted Data", zh: "提取数据", de: "Extrahierte Daten", fr: "Données Extraites" },
@@ -21982,6 +22254,8 @@ ${clientName}
 
             // Función exhaustiva de traducción
             function translateAll() {
+                console.log(`🌐 Traduciendo TODO al idioma: ${lang}`);
+                
                 // Navbar
                 const accentEl = document.getElementById('app-logo-accent');
                 if (accentEl) accentEl.textContent = tr('Energía');
@@ -22022,11 +22296,22 @@ ${clientName}
                     }
                 });
 
-                // Traducir TODO el DOM por contenido
+                // CRÍTICO: Traducir TODO el DOM por contenido - MEJORADO
                 const walker = document.createTreeWalker(
                     document.body,
                     NodeFilter.SHOW_TEXT,
-                    null,
+                    {
+                        acceptNode: function(node) {
+                            // Filtrar scripts, estilos y nodos vacíos
+                            if (node.parentElement && 
+                                (node.parentElement.tagName === 'SCRIPT' || 
+                                 node.parentElement.tagName === 'STYLE' ||
+                                 !node.textContent.trim())) {
+                                return NodeFilter.FILTER_REJECT;
+                            }
+                            return NodeFilter.FILTER_ACCEPT;
+                        }
+                    },
                     false
                 );
 
@@ -22035,6 +22320,7 @@ ${clientName}
                 
                 while (node = walker.nextNode()) {
                     const trimmed = node.textContent.trim();
+                    // CRÍTICO: Buscar CUALQUIER texto que tenga traducción en TR
                     if (trimmed && TR[trimmed]) {
                         nodesToTranslate.push({node, original: trimmed});
                     }
@@ -22043,7 +22329,7 @@ ${clientName}
                 // Traducir todos los nodos encontrados
                 nodesToTranslate.forEach(({node, original}) => {
                     const newText = tr(original);
-                    if (node.textContent.includes(original)) {
+                    if (newText !== original && node.textContent.includes(original)) {
                         node.textContent = node.textContent.replace(original, newText);
                     }
                 });
@@ -22056,11 +22342,11 @@ ${clientName}
                 
                 // CRÍTICO: Traducir placeholders del modal Request Improvement
                 const modalInputs = [
-                    { id: 'improvement-comercial-code', text: 'CÓDIGO COMERCIAL (Obligatorio)' },
-                    { id: 'improvement-client-name', text: 'Nombre Cliente' },
-                    { id: 'improvement-client-cups', text: 'CUPS' },
-                    { id: 'improvement-client-phone', text: 'Teléfono' },
-                    { id: 'improvement-client-email', text: 'Email' },
+                    { id: 'improvement-comercial-code', text: 'CÓDIGO COMERCIAL (Obligatorio)' }, // Oculto
+                    { id: 'improvement-client-name', text: 'Nombre Cliente (Opcional)' },
+                    { id: 'improvement-client-cups', text: 'CUPS' }, // Oculto
+                    { id: 'improvement-client-phone', text: 'Teléfono (Opcional)' },
+                    { id: 'improvement-client-email', text: 'Email (Opcional)' },
                     { id: 'improvement-observations', text: 'Observaciones (opcional)' }
                 ];
                 modalInputs.forEach(({id, text}) => {
@@ -22074,7 +22360,10 @@ ${clientName}
                     const options = sortSelect.querySelectorAll('option');
                     options.forEach(option => {
                         const originalText = option.textContent.trim();
-                        option.textContent = tr(originalText);
+                        const translated = tr(originalText);
+                        if (translated !== originalText) {
+                            option.textContent = translated;
+                        }
                     });
                 }
                 
@@ -22092,9 +22381,22 @@ ${clientName}
                     ];
                     
                     if (buttonTexts.includes(text)) {
-                        button.textContent = tr(text);
+                        const translated = tr(text);
+                        if (translated !== text) {
+                            button.textContent = translated;
+                        }
                     }
                 });
+                
+                // CRÍTICO: Traducir elementos con data-i18n
+                document.querySelectorAll('[data-i18n]').forEach(el => {
+                    const key = el.getAttribute('data-i18n');
+                    if (key) {
+                        el.textContent = tr(key);
+                    }
+                });
+                
+                console.log(`✅ Traducción completada al idioma: ${lang}`);
             }
             
             // CRÍTICO: Hacer translateAll disponible globalmente
@@ -22106,20 +22408,44 @@ ${clientName}
                     const oldLang = lang;
                     lang = newLang;
                     localStorage.setItem('appLanguage', newLang);
+                    localStorage.setItem('selectedLanguage', newLang); // ⭐ SINCRONIZAR
                     
-                    // Solo recargar si es un cambio manual del usuario (no la carga inicial)
-                    if (!skipReload && oldLang !== newLang) {
-                        console.log(`🔄 Cambiando idioma de ${oldLang} a ${newLang} - Recargando página...`);
+                    // CRÍTICO: Si hay un cambio real de idioma, SIEMPRE recargar para evitar textos mixtos
+                    if (oldLang !== newLang) {
+                        console.log(`🔄 Cambiando idioma de ${oldLang} a ${newLang} - Recargando página para limpiar todo...`);
+                        // Asegurar que el nuevo idioma esté guardado ANTES de recargar
+                        localStorage.setItem('appLanguage', newLang);
+                        localStorage.setItem('selectedLanguage', newLang); // ⭐ SINCRONIZAR
+                        // Forzar recarga completa para limpiar cualquier texto del idioma anterior
                         location.reload();
                         return;
                     }
                     
-                    // Si es carga inicial, solo actualizar la UI
+                    // Si es carga inicial (mismo idioma), solo actualizar la UI
                     if (document.getElementById('language-selector')) {
                         document.getElementById('language-selector').value = newLang;
                     }
+                    // ⭐ Actualizar también selector del panel
+                    if (document.getElementById('panel-language-selector')) {
+                        document.getElementById('panel-language-selector').value = newLang;
+                        currentPanelLanguage = newLang;
+                    }
+                    
                     document.title = tr('DRK COMPARADOR');
-                    translateAll();
+                    
+                    // CRÍTICO: Traducir TODO inmediatamente
+                    setTimeout(() => {
+                        translateAll();
+                        if (typeof translatePanel === 'function') translatePanel();
+                    }, 0);
+                    setTimeout(() => {
+                        translateAll();
+                        if (typeof translatePanel === 'function') translatePanel();
+                    }, 100);
+                    setTimeout(() => {
+                        translateAll();
+                        if (typeof translatePanel === 'function') translatePanel();
+                    }, 500);
                 },
                 translate: tr,
                 retranslate: translateAll,
@@ -22752,20 +23078,34 @@ function translatePanel() {
 }
 
 function changePanelLanguage(lang) {
+    console.log(`🔄 changePanelLanguage llamado: de "${currentPanelLanguage}" a "${lang}"`);
     currentPanelLanguage = lang;
     translatePanel();
     translateComparisonTexts(); // Traducir textos de la comparativa
     
-    // Guardar idioma para cuando entre a la calculadora
+    // CRÍTICO: Sincronizar AMBOS localStorage
     localStorage.setItem('selectedLanguage', lang);
+    localStorage.setItem('appLanguage', lang); // ⭐ SINCRONIZAR
     
-    console.log('🌍 Idioma del panel cambiado a:', lang);
-    console.log('✅ El idioma se aplicará automáticamente en la calculadora');
+    console.log('✅ Idioma del panel cambiado a:', lang);
+    console.log('📦 localStorage sincronizado:', {
+        appLanguage: localStorage.getItem('appLanguage'),
+        selectedLanguage: localStorage.getItem('selectedLanguage')
+    });
+    console.log('🌐 currentPanelLanguage ahora es:', currentPanelLanguage);
 }
 
 // Cargar idioma guardado al inicio
 document.addEventListener('DOMContentLoaded', function() {
-    const savedLang = localStorage.getItem('selectedLanguage') || 'es';
+    // ⭐ Leer de AMBOS y sincronizar
+    const savedLang = localStorage.getItem('appLanguage') 
+                   || localStorage.getItem('selectedLanguage') 
+                   || 'es';
+    
+    // ⭐ Sincronizar AMBOS
+    localStorage.setItem('appLanguage', savedLang);
+    localStorage.setItem('selectedLanguage', savedLang);
+    
     currentPanelLanguage = savedLang;
     document.getElementById('panel-language-selector').value = savedLang;
     translatePanel();
@@ -22828,11 +23168,21 @@ function showPanel() {
     document.body.classList.remove('showing-calculator');
     document.body.classList.remove('showing-comparison');
     window.scrollTo(0, 0);
+    
+    // Traducir panel por si acaso
+    setTimeout(() => {
+        if (typeof translatePanel === 'function') translatePanel();
+    }, 50);
 }
 
 function showPanelFromComparison() {
     document.body.classList.remove('showing-comparison');
     window.scrollTo(0, 0);
+    
+    // Traducir panel por si acaso
+    setTimeout(() => {
+        if (typeof translatePanel === 'function') translatePanel();
+    }, 50);
 }
 
 // ========== FRIENDS CODE SECTION ==========
@@ -24227,11 +24577,21 @@ function renderComparisonHighlight(mejor, peor, mejorPrecio, peorPrecio, drkInde
 
 // ========== EMAIL BACKOFFICE MODAL ==========
 function openEmailModal() {
-    // Traducir el modal antes de abrirlo
-    translatePanel();
-    
     document.getElementById('email-modal').classList.add('active');
     document.body.style.overflow = 'hidden';
+    
+    // Traducir el modal DESPUÉS de mostrarlo
+    setTimeout(() => {
+        const elements = document.querySelectorAll('#email-modal [data-translate]');
+        console.log(`📧 Traduciendo ${elements.length} elementos del modal de email al idioma: ${currentPanelLanguage}`);
+        elements.forEach(el => {
+            const key = el.getAttribute('data-translate');
+            const translation = getPanelTranslation(key);
+            if (translation) {
+                el.textContent = translation;
+            }
+        });
+    }, 100);
 }
 
 function closeEmailModal() {
