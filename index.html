@@ -23080,6 +23080,18 @@ function translatePanel() {
 function changePanelLanguage(lang) {
     console.log(`🔄 changePanelLanguage llamado: de "${currentPanelLanguage}" a "${lang}"`);
     currentPanelLanguage = lang;
+    
+    // ⭐ CRÍTICO: Actualizar también la variable lang de la calculadora
+    if (typeof window.LANG !== 'undefined' && window.LANG.getCurrentLang) {
+        // Actualizar lang sin recargar
+        const currentCalcLang = window.LANG.getCurrentLang();
+        if (currentCalcLang !== lang) {
+            // Forzar actualización de la variable lang interna
+            window.LANG.change(lang, true); // skipReload = true
+            console.log(`🔄 Variable lang de calculadora actualizada a: ${lang}`);
+        }
+    }
+    
     translatePanel();
     translateComparisonTexts(); // Traducir textos de la comparativa
     
